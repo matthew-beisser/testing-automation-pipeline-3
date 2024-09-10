@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "testing-automation-pipeline"
+version = "0.1.0"
+description = ""
+authors = ["Matt Beisser <matthew.beisser@luminartech.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
