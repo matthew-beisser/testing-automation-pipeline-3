@@ -1,0 +1,43 @@
+@startuml context_end_of_line_calibration
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+' Elements
+Enterprise_Boundary(cloud, "The Cloud") {
+    System_Ext(Jira, "Issue Tracking", "Jira")
+    System_Ext(Jama, "Requirements Management", "Jama")
+    System(Database, "Master Database", "Database containing test data from all workstations")
+    
+    Enterprise_Boundary(facility, "Test Facility") {
+        Person(Tester, "Tester")
+        System(TestWorkStation, "Workstation", "Computer running lidar testing software\n e.g. Valkyrie")
+        System_Ext(Lidar, "Lidar", "e.g. Iris")
+
+        System_Ext(UnprocessedData, "File Storage", "Storage location for unprocessed test data")
+
+        System_Boundary(Pipeline, "Testing Pipeline") {
+            System_Boundary(ADPM, "ADPM - Autonomous Driving Platform Module") {
+                System(LSS, "Lidar Sensor Service", "Service providing Point Clouds and Sensor Communication on ADPM")
+                System_Ext(MaintenanceManager, "VCC Maintenance Manager", "DoIP Service")
+                System_Ext(Consumer, "Consuming System", "e.g. Zenseact OnePilot System using Point Cloud")
+            }
+            System_Ext(FLL, "Forward Looking Lidar", "Luminar Iris Lidar")
+        }
+    }
+}
+
+' Relationships
+Rel(Tester, TestWorkStation, "trigger lidar test")
+Rel(TestWorkStation, Lidar, "telnet commands,\ndoip request")
+Rel(TestWorkStation, UnprocessedData, "pcap files\n.csv\n.txt")
+Rel(Lidar, TestWorkStation, "point cloud data,\ntelnet response,\ndoip response")
+Rel(UnprocessedData, MaintenanceManager, "<TODO>")
+'Rel(TestWorkStation, MaintenanceManager, "DoIP")
+
+Rel(LSS, MaintenanceManager, "getCalibrationTrigger, getCalibrationInput(LidarEndOfLineCalibrationInput&)")
+Rel(LSS, MaintenanceManager, "setCalibrationSucceeded(SensorExtrinsicCalibration) or setCalibrationFailed(LidarEndOfLineCalibrationStatus)")
+
+BiRel(LSS, FLL, "SOME/IP Sensor Control and Status Messages")
+
+Rel(FLL, LSS, "UDP Point Cloud Packets")
+Rel(LSS, Consumer, "SensorExtrinsicCalibration")
+
+@enduml
