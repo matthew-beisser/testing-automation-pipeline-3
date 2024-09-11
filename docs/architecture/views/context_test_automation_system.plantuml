@@ -1,8 +1,6 @@
 @startuml context_test_automation_system
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
-'LAYOUT_WITH_LEGEND()
-
 ' Elements
 Enterprise_Boundary(CloudSystem, "External Network") {
         System_Ext(Jira, "Issue Tracking", "Jira")
@@ -11,7 +9,7 @@ Enterprise_Boundary(CloudSystem, "External Network") {
     
     Enterprise_Boundary(FacilitySystem, "Test Facility") {
         Person(Tester1, "Test Engineer 1")
-        System(TestWorkStation, "Workstation", "Computer running lidar testing software\n e.g. Valkyrie")
+        System_Ext(TestWorkStation, "Workstation", "Computer running lidar testing software\n e.g. Valkyrie")
         System_Ext(Lidar, "Lidar", "e.g. Iris")
         
         Person(Tester2, "Test Engineer 2")
@@ -29,12 +27,11 @@ Enterprise_Boundary(CloudSystem, "External Network") {
     }
 }
 
-'Lay_U(Tester1, Tester2)
-
-Rel_Neighbor(TestWorkStation, FileStorage, "write .pcap, .csv, .txt files")
+'Lay_U(Tester2, GUI)
 
 ' Relationships
 Rel(Tester1, TestWorkStation, "trigger  lidar  test")
+Rel_Neighbor(TestWorkStation, FileStorage, "write .pcap, .csv, .txt files")
 BiRel(Jira, TestWorkStation, "work  item")
 Rel(FileMonitor, FileStorage, "check  for  files")
 Rel_Neighbor(DataAnalysis, DataStore, "store  analysis  results")
@@ -45,8 +42,9 @@ Rel(FileStorage, FileMonitor, "unprocessed  files")
 Rel(TestWorkStation, Lidar, "telnet  commands,\ndoip  request")
 
 Rel(Lidar, TestWorkStation, "point  cloud,\ndiagnostics  data")
-Rel(Tester2, GUI, "data  request  via  webpage")
-Rel(DataCompilation, Jama, "upload  results")
+Rel(Tester2, GUI, "data\n  request")
+Rel(GUI, Tester2, "data\n  summary")
+Rel(DataCompilation, Jama, "test  evidence")
 
 Rel(DataStore, MasterDataStore, "sync  data")
 
