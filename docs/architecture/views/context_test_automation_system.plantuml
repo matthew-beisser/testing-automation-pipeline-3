@@ -1,0 +1,53 @@
+@startuml context_test_automation_system
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+'LAYOUT_WITH_LEGEND()
+
+' Elements
+Enterprise_Boundary(CloudSystem, "External Network") {
+        System_Ext(Jira, "Issue Tracking", "Jira")
+        System_Ext(Jama, "Requirements Management", "Jama")
+        System(MasterDataStore, "Master Data Store", "Database containing test data from all workstations")
+    
+    Enterprise_Boundary(FacilitySystem, "Test Facility") {
+        Person(Tester1, "Test Engineer 1")
+        System(TestWorkStation, "Workstation", "Computer running lidar testing software\n e.g. Valkyrie")
+        System_Ext(Lidar, "Lidar", "e.g. Iris")
+        
+        Person(Tester2, "Test Engineer 2")
+
+        System_Ext(FileStorage, "File Storage", "Storage location for unprocessed test data")
+
+        System_Boundary(Pipeline, "Testing Pipeline") {
+            System(FileMonitor, "File Monitor", "Process incoming test file results")
+            System(DataStore, "Data Store", "Local database and synchronization")
+            System(DataAnalysis, "Data Analysis", "Perform target extraction analysis")
+            System_Boundary(GUI, "User Interface") {
+                System(DataCompilation, "Data Compilation", "Create output based on analysis results\ne.g. .csv, images, html")
+            }
+        }
+    }
+}
+
+'Lay_U(Tester1, Tester2)
+
+Rel_Neighbor(TestWorkStation, FileStorage, "write .pcap, .csv, .txt files")
+
+' Relationships
+Rel(Tester1, TestWorkStation, "trigger  lidar  test")
+BiRel(Jira, TestWorkStation, "work  item")
+Rel(FileMonitor, FileStorage, "check  for  files")
+Rel_Neighbor(DataAnalysis, DataStore, "store  analysis  results")
+BiRel(DataAnalysis, DataStore, "request / retrieve data")
+BiRel(DataCompilation, DataStore, "request / retrieve  analysis  results")
+Rel_Neighbor(FileMonitor, DataStore, "store  test  data")
+Rel(FileStorage, FileMonitor, "unprocessed  files")
+Rel(TestWorkStation, Lidar, "telnet  commands,\ndoip  request")
+
+Rel(Lidar, TestWorkStation, "point  cloud,\ndiagnostics  data")
+Rel(Tester2, GUI, "data  request  via  webpage")
+Rel(DataCompilation, Jama, "upload  results")
+
+Rel(DataStore, MasterDataStore, "sync  data")
+
+@enduml
