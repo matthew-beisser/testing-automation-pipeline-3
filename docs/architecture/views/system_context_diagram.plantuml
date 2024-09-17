@@ -1,0 +1,20 @@
+@startuml system_context_diagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_TOP_DOWN()
+
+' Elements
+Enterprise_Boundary(System, "[System Context] Testing Automation Pipeline") {
+        Person_Ext(Tester, "Test Engineer 1")
+        System_Ext(TestSuite, "Test Suite", "Existing testing process.")
+        System(TAS, "Test Automation System", "Suite of tools that automates the test and verification process of Lidar sensors.")
+        Person_Ext(DataAnalyst, "Data Analyst", "Person responsible for analyzing test data.")
+}
+
+' Relationships
+Rel_Neighbor(Tester, TestSuite, "Uses")
+Rel(TestSuite, TAS, "Outputs  lidar  test  data")
+Rel_Neighbor(TAS, DataAnalyst, "Generates  reports")
+
+@enduml
+

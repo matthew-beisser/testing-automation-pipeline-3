@@ -15,4 +15,8 @@ For more information about it check out the video on the [C4 Model Website](http
 
 ### System Context Diagram
 
-![context_end_of_line_calibration](views/context_test_automation_system.svg)
+![system_context_diagram](views/system_context_diagram.svg)
+
+### Container Diagram
+
+![container_diagrams](views/container_diagram.svg)
