@@ -1,18 +1,16 @@
-@startuml container_diagram_phase_1
+@startuml container_diagram_phase_1_data_processing
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
 ' Elements
 Enterprise_Boundary(System, "[Container] Phase 1: Testing Automation Pipeline") {
     Enterprise_Boundary(CloudSystem, "External Network") {    
-        Container_Ext(Jira, "Issue Tracking", "Jira")
         Container_Ext(Jama, "Requirements Management", "Jama")   
         
         Enterprise_Boundary(FacilitySystem, "Test Facility") {
-            Person(Tester1, "Test Engineer 1")
-            Container_Ext(TestWorkStation, "Workstation", "Windows, Labview (Valkyrie)", "Computer running lidar testing software")
-            Container_Ext(Lidar, "Lidar", "Iris, Halo", "")
-            
+            System_Boundary(TestWorkStation, "Test Workstation") {
+                Container_Ext(Workstation, "Workstation", "Windows, Labview (Valkyrie)", "Computer running lidar testing software")
+            }
             Person(Tester2, "Test Engineer 2")
 
             Container_Ext(FileStorage, "File Storage", "nfs", "Storage location for unprocessed test data")
@@ -29,20 +27,15 @@ Enterprise_Boundary(System, "[Container] Phase 1: Testing Automation Pipeline") 
     }
 }
 
-Lay_U(Jira, Jama)
 
 ' Relationships
-Rel(Tester1, TestWorkStation, "trigger  lidar  test", "gui")
-BiRel_Neighbor(Jira, TestWorkStation, "work  item", "rest  api")
 Rel(TestWorkStation, FileStorage, "write .pcap, .csv, .txt files")
 BiRel(FileMonitor, FileStorage, "retrieve  unprocessed  files")
 Rel(DataAnalysis, Database, "store  analysis  results", "sql")
 BiRel(DataAnalysis, Database, "request / retrieve data", "sql")
 BiRel(DataCompilation, Database, "request / retrieve  analysis  results", "sql")
 Rel_Neighbor(FileMonitor, Database, "store  test  data", "sql")
-Rel(TestWorkStation, Lidar, "sensor  commands", "telnet, someip")
 
-Rel(Lidar, TestWorkStation, "point  cloud,\ndiagnostics  data", "udp, telnet, someip")
 Rel(Tester2, DataCompilation, "data\n  request")
 Rel(DataCompilation, Tester2, "data  summary,\n reports,\n images,\n notifications")
 Rel(DataCompilation, Jama, "test  evidence", "rest  api")

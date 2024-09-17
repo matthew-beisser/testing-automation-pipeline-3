@@ -1,0 +1,36 @@
+@startuml container_diagram_phase_1_data_collection
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' Elements
+Enterprise_Boundary(System, "[Container] Phase 1: Testing Automation Pipeline (Data Collection)") {
+    Enterprise_Boundary(CloudSystem, "External Network") {    
+        Container_Ext(Jira, "Issue Tracking", "Jira")
+        
+        Enterprise_Boundary(FacilitySystem, "Test Facility") {
+            Person(Tester1, "Test Engineer 1")
+            Container_Ext(TestWorkStation, "Workstation", "Windows, Labview (Valkyrie)", "Computer running lidar testing software.")
+            Container_Ext(Lidar, "Lidar", "Iris, Halo", "")
+
+            Container_Ext(FileStorage, "File Storage", "nfs", "Storage location for unprocessed test data.")
+
+            System_Boundary(TestPipelineSystem, "Testing Pipeline") {
+                System(TestPipeline, "Testing Pipeline", "Process incoming test data, perform target extractation, and store results.")
+            }
+        }
+    }
+}
+
+Lay_U(Jira, TestWorkStation)
+
+' Relationships
+Rel(Tester1, TestWorkStation, "trigger  lidar  test", "gui")
+BiRel(Jira, TestWorkStation, "work  item", "rest  api")
+Rel(TestWorkStation, FileStorage, "write  test  files", ".pcap, .csv, .txt")
+BiRel(TestPipeline, FileStorage, "retrieve  unprocessed  files")
+Rel(TestWorkStation, Lidar, "sensor  commands", "telnet, someip")
+
+Rel(Lidar, TestWorkStation, "point  cloud,\ndiagnostics  data", "udp, telnet, someip")
+
+@enduml
+
