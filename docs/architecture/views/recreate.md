@@ -24,3 +24,10 @@ java -jar plantuml-1.2023.12.jar views/context_end_of_line_calibration.plantuml 
 ```
 
 Note: The new file name of the .svg is chosen based on the title set in the first line of the .plantuml file. Make sure to name source .plantuml file the same as the resulting .svg file for consistency.
+
+To generate files for all the plantuml files
+
+```shell
+cd docs/architecture/views/
+find . -iname '*.plantuml' | xargs java -jar plantuml-1.2024.7.jar -tsvg
+```

@@ -1,0 +1,28 @@
+@startuml container_diagram_existing_data_collection
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' Elements
+Enterprise_Boundary(System, "[Container] Existing Process: Testing Pipeline (Data Collection)") {
+    Enterprise_Boundary(CloudSystem, "External Network") {    
+        Container_Ext(Jira, "Issue Tracking", "Jira")
+        Container_Ext(FileStorage, "File Storage", "nfs", "Storage location for unprocessed test data.")
+        
+        Enterprise_Boundary(FacilitySystem, "Test Facility") {
+            Person(Tester1, "Test Engineer 1")
+            Container_Ext(TestWorkStation, "Workstation", "Windows, Labview (Valkyrie)", "Computer running lidar testing software.")
+            Container_Ext(Lidar, "Lidar", "Iris, Halo", "")
+        }
+    }
+}
+
+' Relationships
+Rel(Tester1, TestWorkStation, "trigger  lidar  test", "gui")
+Rel(Tester1, Jira, "uses", "gui")
+Rel(TestWorkStation, FileStorage, "write  test  files", ".pcap, .csv, .txt")
+Rel(TestWorkStation, Lidar, "sensor  commands", "telnet, someip")
+
+Rel(Lidar, TestWorkStation, "point  cloud,\ndiagnostics  data", "udp, telnet, someip")
+
+@enduml
+
