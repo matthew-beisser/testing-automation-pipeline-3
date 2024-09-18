@@ -16,7 +16,7 @@ Enterprise_Boundary(System, "[Container] Phase 1: Testing Automation Pipeline") 
             Container_Ext(FileStorage, "File Storage", "nfs", "Storage location for unprocessed test data")
 
             System_Boundary(Pipeline, "Testing Pipeline") {
-                Container_Boundary(Docker, "Docker (Ubuntu 24.04 LTS)")  {
+                Container_Boundary(Docker, "Docker (Linux)")  {
                     Container(FileMonitor, "File Monitor", "python", "Process incoming test file results")
                     ContainerDb(Database, "Database", "SQLite", "Local database")
                     Container(DataAnalysis, "Data Analysis", "python", "Perform target extraction and analysis")
