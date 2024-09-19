@@ -6,26 +6,25 @@ Last Updated: 2024-mm-dd
 
 <!-- mdformat-toc start --slug=github --no-anchors --maxlevel=6 --minlevel=2 -->
 
-- [Testing Automation Pipeline System Design](#testing-automation-pipeline-system-design)
-  - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
-  - [Context](#context)
-  - [Goals and Non-Goals](#goals-and-non-goals)
-  - [Milestones](#milestones)
-  - [Existing Solution](#existing-solution)
-    - [Entities](#entities)
-      - [Jira](#jira)
-      - [Valkyrie Workstation](#valkyrie-workstation)
-      - [NFS File Storage](#nfs-file-storage)
-        - [PCAP Naming Convention](#pcap-naming-convention)
-      - [Lidar](#lidar)
-    - [Data Collection](#data-collection)
-    - [Data Processing](#data-processing)
-  - [Proposed Solution](#proposed-solution)
-    - [Entities](#entities-1)
-  - [Cross-Team Impact](#cross-team-impact)
-  - [Open Questions](#open-questions)
-  - [Detailed Scoping and Timeline](#detailed-scoping-and-timeline)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+- [Context](#context)
+- [Goals and Non-Goals](#goals-and-non-goals)
+- [Milestones](#milestones)
+- [Existing Solution](#existing-solution)
+  - [Entities](#entities)
+    - [Jira](#jira)
+    - [Valkyrie Workstation](#valkyrie-workstation)
+    - [NFS File Storage](#nfs-file-storage)
+      - [PCAP Naming Convention](#pcap-naming-convention)
+    - [Lidar](#lidar)
+  - [Data Collection](#data-collection)
+  - [Data Processing](#data-processing)
+- [Proposed Solution](#proposed-solution)
+  - [New Entities](#new-entities)
+- [Cross-Team Impact](#cross-team-impact)
+- [Open Questions](#open-questions)
+- [Detailed Scoping and Timeline](#detailed-scoping-and-timeline)
 
 <!-- mdformat-toc end -->
 
@@ -40,7 +39,7 @@ A high level summary that every engineer at the company should understand and us
 Functional testing (FT) monitors a lidar's performance and functionality under various conditions and different lengths of time.
 Three different types of FT testing (FT1, FT2, and FT3) is performed by the Product Assurance Teams on batches of sensors.
 
-This document describes the current [FT2 process](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl) as well as the proposed automation for parts of this process. 
+This document describes the current [FT2 process](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl) as well as the proposed automation for parts of this process.
 
 ## Context
 
@@ -51,23 +50,23 @@ A description of the problem at hand, why this project is necessary, what people
 The Product Assurance Team has automated several of the individual steps required for FT2 testing.
 These individual automation steps have allowed the team to put together their current semi-automated process.
 
-The current FT2 process relies upon a series of steps requiring users to input file names, copy files to various locations, trigger data analysis, and extract and manipulate data from .csv files to produce reports. 
+The current FT2 process relies upon a series of steps requiring users to input file names, copy files to various locations, trigger data analysis, and extract and manipulate data from .csv files to produce reports.
 All of these steps are prone to user error which causes delays.
 Perhaps more importantly though, the ability to view the test data over time against KPIs as well as interogating the report analysis is lacking. This makes trend analysis of sensor issues not possible without investing an extradorinary amount of time.
 
-The proposed software solution is to 
+The proposed software solution is to
 
 The complete automation of the FT2 process is not currently feasible.
 A test engineer will still be required even with the proposed automation solution.
 
 The proposed FT2 automation steps will address:
+
 - Test output files not being transfered
 - Storing sensor test output in a commonly accessible and searchable way
 - Automatic triggering of data analysis (target extraction)
 - Storing target extraction results in a commonly accessible and searchable way
 - Reducing the time required for analysis and report creation
 - The lack of dashboards for viewing data against KPIs
-
 
 ## Goals and Non-Goals
 
@@ -94,10 +93,11 @@ End Date: Add feature X, Y, Z to new system: July 14th, 2018
 
 Add an [Update] subsection here if the ETA of some of these milestone changes, so the stakeholders can easily see the most up-to-date estimates.
 -->
+
 FTD open telemetry tracing complete
 Distributed Tracing Solution (Jaeggar, Grafana Loki, etc) tested and choosen
-  - Corresponding database selected
 
+- Corresponding database selected
 
 ## Existing Solution
 
@@ -116,9 +116,9 @@ A single sensor's test completion is tracked as a comment. E.g. [PV Retest Leg 1
 
 #### Valkyrie Workstation
 
-A Windows workstation running the Valkyrie (Labview) software.  
-Valykrie is a GUI that allows operators to select and run various tests for a sensor.  
-The output of these tests, currently telnet .csv and point cloud .pcap captures, are stored on the NFS.  
+A Windows workstation running the Valkyrie (Labview) software.\
+Valykrie is a GUI that allows operators to select and run various tests for a sensor.\
+The output of these tests, currently telnet .csv and point cloud .pcap captures, are stored on the NFS.
 
 #### NFS File Storage
 
@@ -128,7 +128,7 @@ The current base location for FT2 data is: `\\mco1-fs03\Workgroups\validation-da
 
 Example output location: `Iris_Sensor_Head_70-0025-010\P32406697T00003188VAE7E3\`
 
-```
+```shell
 Iris_Sensor_Head_XX-YYYY-ZZZ        - (XX-YYYY-ZZZ is the numeric sensor hardware pedigree) 
 └── <Sensor Serial Number> 
     ├── FT2-Pre
@@ -163,11 +163,10 @@ In addition to describing the current implementation, you should also walk throu
 A user story is a great way to frame this. Keep in mind that your system might have different types of users with different use cases.
 -->
 
-
-
 ## Proposed Solution
 
-### Entities
+### New Entities
+
 <!--
 Some people call this the Technical Architecture section. Again, try to walk through a user story to concretize this. Feel free to include many sub-sections and diagrams.
 
@@ -196,8 +195,6 @@ How might the support team communicate this to the customers?
 <!--
 Any open issues that you aren’t sure about, contentious decisions that you’d like readers to weigh in on, suggested future work, and so on. A tongue-in-cheek name for this section is the “known unknowns”.
 -->
-
-
 
 ## Detailed Scoping and Timeline
 
