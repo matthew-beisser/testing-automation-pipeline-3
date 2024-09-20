@@ -15,13 +15,15 @@ Last Updated: 2024-mm-dd
   - [Entities](#entities)
     - [Jira](#jira)
     - [Valkyrie Workstation](#valkyrie-workstation)
-    - [NFS File Storage](#nfs-file-storage)
       - [PCAP Naming Convention](#pcap-naming-convention)
+    - [NFS File Storage](#nfs-file-storage)
     - [Lidar](#lidar)
+    - [Data Analysis (Matlab)](#data-analysis-matlab)
   - [Data Collection](#data-collection)
   - [Data Processing](#data-processing)
 - [Proposed Solution](#proposed-solution)
   - [New Entities](#new-entities)
+- [Alternative Solutions](#alternative-solutions)
 - [Cross-Team Impact](#cross-team-impact)
 - [Open Questions](#open-questions)
 - [Detailed Scoping and Timeline](#detailed-scoping-and-timeline)
@@ -36,16 +38,33 @@ Last Updated: 2024-mm-dd
 A high level summary that every engineer at the company should understand and use to decide if it’s useful for them to read the rest of the doc. It should be 3 paragraphs max.
 -->
 
-Functional testing (FT) monitors a lidar's performance and functionality under various conditions and different lengths of time.
-Three different types of FT testing (FT1, FT2, and FT3) is performed by the Product Assurance Teams on batches of sensors.
+An integral step in the manufacturing of lidar is ensuring they perform to the system requirements.
+While each sensor at the manufacturing facility undergoes tests before leaving the site, the Product Assurance Team performs additional tests on select batches of sensors.
 
-This document describes the current [FT2 process](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl) as well as the proposed automation for parts of this process.
+This additional testing, known as parameter testing, is conducted to verify the performance, functionality, and reliability of the lidar.
+It involves setting the parameters to specific values and then assessing the lidar's behavior.
+The results are then compared against expected outcomes to identify any potential issues or signs of degradation in the lidar's performance.
+
+There are different levels of parameter testing, which can range from comprehensive testing that covers system-level requirements, to more limited testing that focuses on a subset of these parameters, or even continuous monitoring of certain intrinsic parameters during operation.
+
+A table of the 3 parameter test defintions for Iris and Iris+ is reproduced below.
+
+|                                     Iris (VCC) Test ID                                     | Description for Iris | Iris+ (MB) Test ID |   Description for Iris+ | Luminar Test ID |             Luminar Description              |
+| :----------------------------------------------------------------------------------------: | :------------------: | :----------------- | ----------------------: | :-------------: | :------------------------------------------: |
+| [FT1](https://luminar.jamacloud.com/perspective.req#/testPlans/2252407/home/?projectId=87) |  Functional Test 1   | P02                | Parameter Testing Small |       FPT       |    Functional Parameter Testing (Limited)    |
+| [FT2](https://luminar.jamacloud.com/perspective.req#/testPlans/1824961/home/?projectId=87) |  Functional Test 2   | P03                | Parameter Testing Large |       APT       | Acceptance Parameter Testing (Comprehensive) |
+| [FT3](https://luminar.jamacloud.com/perspective.req#/testPlans/2319205/home/?projectId=87) |  Functional Test 3   | P01                |   Continuous Monitoring |       CPM       |       Continuous Parameter Monitoring        |
+
+While the exact specifications of these tests are outside the scope of this document (though details can be found [here](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl))
+the testing process, how test engineers collect data, and how that proccess can be automated is the focus of this design.
 
 ## Context
 
 <!-- 
 A description of the problem at hand, why this project is necessary, what people need to know to assess this project, and how it fits into the technical strategy, product strategy, or the team’s quarterly goals.
 -->
+
+This document describes the current [FT2 process](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl) as well as the proposed automation for parts of this process.
 
 The Product Assurance Team has automated several of the individual steps required for FT2 testing.
 These individual automation steps have allowed the team to put together their current semi-automated process.
@@ -101,6 +120,12 @@ Distributed Tracing Solution (Jaeggar, Grafana Loki, etc) tested and choosen
 
 ## Existing Solution
 
+<!-- 
+In addition to describing the current implementation, you should also walk through a high level example flow to illustrate how users interact with this system and/or how data flow through it.
+
+A user story is a great way to frame this. Keep in mind that your system might have different types of users with different use cases.
+-->
+
 ### Entities
 
 #### Jira
@@ -120,9 +145,33 @@ A Windows workstation running the Valkyrie (Labview) software.\
 Valykrie is a GUI that allows operators to select and run various tests for a sensor.\
 The output of these tests, currently telnet .csv and point cloud .pcap captures, are stored on the NFS.
 
+Valkyrie will be kept as part of the new process.
+
+Repository: [SystemTestTools](https://github.com/luminartech/SystemTestTools)
+POC: Jeff Hawkins
+
+**Outstanding Questions**
+
+- How is Valkyrie going to be deployed as part of the solution?
+  - What is the current update process?
+- Can Valkyrie be integrated with the Jira REST API so ticket numbers can be sourced and test results written?
+  - Seems like the answer is [yes](https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z0000019VpgSAE&l=en-US), thought not sure on the level of effort.
+
+##### PCAP Naming Convention
+
+PCAP files are automatically captured by [Valkyrie](#valkyrie-workstation) at various points in the testing.
+The output file name is based upon the test parameters. E.g. `282_200m_28fov_n4offs_n60_LO123_1_00002_20220428101251.pcap`
+
+**Outstanding Questions**
+
+- The file names contain metadata that presumably is relevant to the data analysis phase.
+  - Parsing these strings seems error prone and complicated.\\
+    Can we write a pcap file with some basic identifiers in the name, but then store the metadata in a corresponding .csv or .json file?
+
 #### NFS File Storage
 
 A common network file share (NFS) used to store output test data before it is processed.
+It's a NAS that is accessible from all workstations.
 
 The current base location for FT2 data is: `\\mco1-fs03\Workgroups\validation-data\`
 
@@ -140,28 +189,33 @@ Iris_Sensor_Head_XX-YYYY-ZZZ        - (XX-YYYY-ZZZ is the numeric sensor hardwar
         └── <Same layout as FT2-Post>
 ```
 
-##### PCAP Naming Convention
-
-PCAP files are automatically captured by [Valkyrie](#valkyrie-workstation) at various points in the testing.
-The output file name is based upon the test parameters. E.g. `282_200m_28fov_n4offs_n60_LO123_1_00002_20220428101251.pcap`
-
 #### Lidar
 
 The Iris, Iris+, or Halo (future) sensor under test.
 
+#### Data Analysis (Matlab)
+
+The data analysis is performed by a Matlab application which performs target extraction on the test pcaps.
+
+Repository: [IrisDataTools](https://github.com/luminartech/IrisDataTools)
+POC: Daniel Ferrone
+
+**Outstanding Questions**
+
+- What are the outputs and how are these used in reporting?
+- How can I run target extraction manually on a single pcap file?
+
 ### Data Collection
 
-The existing data collection portion of the FT2 testing is shown in the diagram below.
+The existing data collection process for the FT2 testing is shown in the diagram below.
 
 ![system_context_diagram](architecture/views/container_diagram_existing_data_collection.svg)
 
 ### Data Processing
 
-<!-- 
-In addition to describing the current implementation, you should also walk through a high level example flow to illustrate how users interact with this system and/or how data flow through it.
+The existing data processing process for the FT2 testing is shown in the diagram below.
 
-A user story is a great way to frame this. Keep in mind that your system might have different types of users with different use cases.
--->
+![system_context_diagram](architecture/views/container_diagram_existing_data_processing.svg)
 
 ## Proposed Solution
 
@@ -171,8 +225,11 @@ A user story is a great way to frame this. Keep in mind that your system might h
 Some people call this the Technical Architecture section. Again, try to walk through a user story to concretize this. Feel free to include many sub-sections and diagrams.
 
 Provide a big picture first, then fill in lots of details. Aim for a world where you can write this, then take a vacation on some deserted island, and another engineer on the team can just read it and implement the solution as you described.
-Alternative Solutions
+-->
 
+## Alternative Solutions
+
+<!--
 What else did you consider when coming up with the solution above? What are the pros and cons of the alternatives? Have you considered buying a 3rd-party solution — or using an open source one — that solves this problem as opposed to building your own?
 Testability, Monitoring and Alerting
 
@@ -182,12 +239,12 @@ I like including this section, because people often treat this as an afterthough
 ## Cross-Team Impact
 
 <!--
-How will this increase on call and dev-ops burden?
-How much money will it cost?
-Does it cause any latency regression to the system?
-Does it expose any security vulnerabilities?
-What are some negative consequences and side effects?
-How might the support team communicate this to the customers?
+- How will this increase on call and dev-ops burden?
+- How much money will it cost?
+- Does it cause any latency regression to the system?
+- Does it expose any security vulnerabilities?
+- What are some negative consequences and side effects?
+- How might the support team communicate this to the customers?
 -->
 
 ## Open Questions
@@ -195,6 +252,10 @@ How might the support team communicate this to the customers?
 <!--
 Any open issues that you aren’t sure about, contentious decisions that you’d like readers to weigh in on, suggested future work, and so on. A tongue-in-cheek name for this section is the “known unknowns”.
 -->
+
+- Is this project approved?
+- How long and for what parts of the project am I committed?
+- What's the desired start time for contractors?
 
 ## Detailed Scoping and Timeline
 

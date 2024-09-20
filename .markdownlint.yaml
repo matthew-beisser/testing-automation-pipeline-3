@@ -12,3 +12,5 @@ MD033:
     - br # Since there is no markdown alternative, we allow <br>
     - sup # Since special characters such as "*" can not be used with "^", we allow <sup>
     - img # Since special operations such as width or align can not be used with [](), we allow <img>
+
+MD036: false # Unnecessary to force bold stand alone text to be a heading
