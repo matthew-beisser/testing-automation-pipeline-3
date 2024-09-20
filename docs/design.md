@@ -19,10 +19,12 @@ Last Updated: 2024-mm-dd
     - [NFS File Storage](#nfs-file-storage)
     - [Lidar](#lidar)
     - [Data Analysis (Matlab)](#data-analysis-matlab)
-  - [Data Collection](#data-collection)
-  - [Data Processing](#data-processing)
+  - [Existing Data Collection](#existing-data-collection)
+  - [Existing Data Processing](#existing-data-processing)
 - [Proposed Solution](#proposed-solution)
   - [New Entities](#new-entities)
+  - [Proposed Data Collection](#proposed-data-collection)
+  - [Proposed Data Processing](#proposed-data-processing)
 - [Alternative Solutions](#alternative-solutions)
 - [Cross-Team Impact](#cross-team-impact)
 - [Open Questions](#open-questions)
@@ -217,21 +219,35 @@ POC: Daniel Ferrone
 - How can I run target extraction manually on a single pcap file?
 - What are the outputs, how many are there, and how are they used in reporting?
 
-### Data Collection
+### Existing Data Collection
 
 The existing data collection process for the FT2 testing is shown in the diagram below.
 
-![system_context_diagram](architecture/views/container_diagram_existing_data_collection.svg)
+![container_diagram_existing_data_collection](architecture/views/container_diagram_existing_data_collection.svg)
 
-### Data Processing
+### Existing Data Processing
 
 The existing data processing process for the FT2 testing is shown in the diagram below.
 
-![system_context_diagram](architecture/views/container_diagram_existing_data_processing.svg)
+![container_diagram_existing_data_processing](architecture/views/container_diagram_existing_data_processing.svg)
 
 ## Proposed Solution
 
 ### New Entities
+
+### Proposed Data Collection
+
+The proposed data collection process for the FT2 testing is shown in the diagram below.
+
+![container_diagram_phase_x_data_collection](architecture/views/container_diagram_phase_x_data_collection.svg)
+
+### Proposed Data Processing
+
+<!--
+The proposed data processing process for the FT2 testing is shown in the diagram below.
+
+![system_context_diagram](architecture/views/container_diagram_existing_data_processing.svg)
+-->
 
 <!--
 Some people call this the Technical Architecture section. Again, try to walk through a user story to concretize this. Feel free to include many sub-sections and diagrams.
