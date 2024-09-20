@@ -1,0 +1,52 @@
+@startuml container_diagram_phase_x_data_collection
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' Elements
+Enterprise_Boundary(System, "[Container] Phase X: Testing Automation Pipeline (Data Collection)") {
+    Enterprise_Boundary(CloudSystem, "External Network") {    
+        Container_Ext(Jira, "Issue Tracking", "Jira", "Test engineer task tracking.")
+        
+        Enterprise_Boundary(FacilitySystem, "Test Facility") {
+            Person(Tester1, "Test Engineer 1")
+
+            Container_Ext(Lidar, "Lidar", "Iris", "Sensor under test.")
+
+            Container_Boundary(TestWorkStation, "Test Workstation") {
+                Container_Ext(Valkyrie, "Labview", "Valkyrie", "GUI for lidar testing.")
+                Container_Ext(DFTLib, "DFT", "doip", "Sends doip commands to lidar. Initiates open telemetry tracing, for tracking and recording doip response data.")
+                Container_Ext(PcapRecorder, "Pcap Recorder", "udp data", "Records point cloud data and writes .pcap files.")
+            }
+
+            System_Boundary(TestPipelineSystem, "Testing Pipeline") {
+                Container(FileStorage, "File Storage", "nas", "Storage location for unprocessed .pcap files.")            
+                System_Boundary(Docker, "Docker (Linux)")  {
+                    System(TestPipeline, "Pipeline Software", "Perform target extractation, and store results.")
+                    Container(OpenTelemetry, "OpenTelemetry Collector", "Jaegar, Loki or similar", "Collect sensor test traces and forward to storage.")
+                    Container_Boundary(DatabaseCollection, "Database") {
+                        ContainerDb(Database, "Database", "TBD", "Storage backend for extraction results (and ???).")
+                        ContainerDb(TraceDatabase, "Trace Database", "TBD", "Storage backend for tracing data.")
+                    }
+                }
+            }
+        }
+    }
+}
+
+Lay_U(Docker, FileStorage)
+
+' Relationships
+Rel(Tester1, Valkyrie, "trigger  lidar  test", "gui")
+BiRel(Jira, Valkyrie, "work  item", "rest  api")
+Rel(PcapRecorder, FileStorage, "write  point  cloud  files", ".pcap")
+BiRel(TestPipeline, FileStorage, "uses  .pcap  files")
+Rel(TestPipeline, Database, "target  extraction  results")
+Rel(Valkyrie, DFTLib, "uses")
+BiRel(DFTLib, Lidar, "sensor  commands / responses", "doip")
+Rel(DFTLib, OpenTelemetry, "traces")
+Rel(OpenTelemetry, TraceDatabase, "traces")
+
+Rel(Lidar, PcapRecorder, "point  cloud", "udp")
+
+@enduml
+

@@ -78,6 +78,8 @@ The proposed software solution is to
 The complete automation of the FT2 process is not currently feasible.
 A test engineer will still be required even with the proposed automation solution.
 
+## Goals and Non-Goals
+
 The proposed FT2 automation steps will address:
 
 - Test output files not being transfered
@@ -86,8 +88,6 @@ The proposed FT2 automation steps will address:
 - Storing target extraction results in a commonly accessible and searchable way
 - Reducing the time required for analysis and report creation
 - The lack of dashboards for viewing data against KPIs
-
-## Goals and Non-Goals
 
 <!--
 The Goals section should:
@@ -139,10 +139,14 @@ Stories are used to group tasks in an adhoc manner. E.g. [PV: Leg1 ReTest_PV1-00
 Tasks (not currently linked to epics) are used to track a certain type of test result for multiple sensors.
 A single sensor's test completion is tracked as a comment. E.g. [PV Retest Leg 1 FT1 Data Collection - Post FW Update](https://luminartech.atlassian.net/browse/TV-8763)
 
+**- Outstanding Questions**
+
 #### Valkyrie Workstation
 
-A Windows workstation running the Valkyrie (Labview) software.\
-Valykrie is a GUI that allows operators to select and run various tests for a sensor.\
+\[External System\]
+
+A Windows workstation running the Valkyrie (Labview) software.
+Valykrie is a GUI that allows operators to select and run various tests for a sensor.
 The output of these tests, currently telnet .csv and point cloud .pcap captures, are stored on the NFS.
 
 Valkyrie will be kept as part of the new process.
@@ -150,25 +154,29 @@ Valkyrie will be kept as part of the new process.
 Repository: [SystemTestTools](https://github.com/luminartech/SystemTestTools)
 POC: Jeff Hawkins
 
-**Outstanding Questions**
+**- Outstanding Questions**
 
 - How is Valkyrie going to be deployed as part of the solution?
   - What is the current update process?
-- Can Valkyrie be integrated with the Jira REST API so ticket numbers can be sourced and test results written?
+- Can Valkyrie be integrated with the Jira REST API so ticket numbers can be sourced and test completion results written?
   - Seems like the answer is [yes](https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z0000019VpgSAE&l=en-US), thought not sure on the level of effort.
+- PCAP recording is currently done with Wireshark, is that going to be replaced with a homegrown app?
+  - Is this in scope, and who will do this work?
 
 ##### PCAP Naming Convention
 
 PCAP files are automatically captured by [Valkyrie](#valkyrie-workstation) at various points in the testing.
 The output file name is based upon the test parameters. E.g. `282_200m_28fov_n4offs_n60_LO123_1_00002_20220428101251.pcap`
 
-**Outstanding Questions**
+**- Outstanding Questions**
 
 - The file names contain metadata that presumably is relevant to the data analysis phase.
   - Parsing these strings seems error prone and complicated.\\
     Can we write a pcap file with some basic identifiers in the name, but then store the metadata in a corresponding .csv or .json file?
 
 #### NFS File Storage
+
+\[External System\] -> \[Internal System\]
 
 A common network file share (NFS) used to store output test data before it is processed.
 It's a NAS that is accessible from all workstations.
@@ -191,19 +199,23 @@ Iris_Sensor_Head_XX-YYYY-ZZZ        - (XX-YYYY-ZZZ is the numeric sensor hardwar
 
 #### Lidar
 
+\[External System\]
+
 The Iris, Iris+, or Halo (future) sensor under test.
 
 #### Data Analysis (Matlab)
+
+\[External System\]
 
 The data analysis is performed by a Matlab application which performs target extraction on the test pcaps.
 
 Repository: [IrisDataTools](https://github.com/luminartech/IrisDataTools)
 POC: Daniel Ferrone
 
-**Outstanding Questions**
+**- Outstanding Questions**
 
-- What are the outputs and how are these used in reporting?
 - How can I run target extraction manually on a single pcap file?
+- What are the outputs, how many are there, and how are they used in reporting?
 
 ### Data Collection
 
