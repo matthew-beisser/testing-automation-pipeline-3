@@ -6,15 +6,15 @@ LAYOUT_TOP_DOWN()
 ' Elements
 Enterprise_Boundary(System, "[System Context] Testing Automation Pipeline") {
         Person_Ext(Tester, "Test Engineer 1")
-        System_Ext(TestSuite, "Test Suite", "Existing testing process.")
-        System(TAS, "Test Automation System", "Suite of tools that automates the test and verification process of Lidar sensors.")
-        Person_Ext(DataAnalyst, "Data Analyst", "Person responsible for analyzing test data.")
+        System(DataCollection, "Data Collection", "Capture sensor test data.")
+        System(DataProcessor, "Data Processing", "Perform sensor test analysis and generate analytics, reports, and dashboards.")
+        Person_Ext(DataAnalyst, "Test Engineer 2")
 }
 
 ' Relationships
-Rel_Neighbor(Tester, TestSuite, "Uses")
-Rel(TestSuite, TAS, "Outputs  lidar  test  data")
-Rel_Neighbor(TAS, DataAnalyst, "Generates  reports")
+Rel_Neighbor(Tester, DataCollection, "initiates")
+Rel(DataCollection, DataProcessor, "triggers")
+Rel_Neighbor(DataProcessor, DataAnalyst, "test  results")
 
 @enduml
 

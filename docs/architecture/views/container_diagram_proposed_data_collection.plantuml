@@ -1,4 +1,4 @@
-@startuml container_diagram_phase_x_data_collection
+@startuml container_diagram_proposed_data_collection
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
@@ -15,18 +15,21 @@ Enterprise_Boundary(System, "[Container] Phase X: Testing Automation Pipeline (D
             Container_Boundary(TestWorkStation, "Test Workstation") {
                 Container_Ext(Valkyrie, "Labview", "Valkyrie", "GUI for lidar testing.")
                 Container_Ext(DFTLib, "DFT", "doip", "Sends doip commands to lidar. Initiates open telemetry tracing, for tracking and recording doip response data.")
-                Container_Ext(PcapRecorder, "Pcap Recorder", "udp data", "Records point cloud data and writes .pcap files.")
+                Container(PcapRecorder, "Pcap Recorder", "udp data", "Records point cloud data and writes .pcap files.")
             }
 
-            System_Boundary(TestPipelineSystem, "Testing Pipeline") {
+            System_Boundary(TestPipelineSystem, "Pipeline Automation") {
                 Container(FileStorage, "File Storage", "nas", "Storage location for unprocessed .pcap files.")            
                 System_Boundary(Docker, "Docker (Linux)")  {
-                    System(TestPipeline, "Pipeline Software", "Perform target extractation, and store results.")
+                    ' System_Boundary(PipelineSoftware, "Pipeline Software") {
+                        ' Container(FileMonitor, "File Monitor", "Process incoming test file results")
+                        System(TestPipeline, "Pipeline Software", "Perform target extractation, and store results.")
+                    ' }
                     Container(OpenTelemetry, "OpenTelemetry Collector", "Jaegar, Loki or similar", "Collect sensor test traces and forward to storage.")
                     Container_Boundary(DatabaseCollection, "Database") {
                         ContainerDb(Database, "Database", "TBD", "Storage backend for extraction results (and ???).")
                         ContainerDb(TraceDatabase, "Trace Database", "TBD", "Storage backend for tracing data.")
-                    }
+                    }                    
                 }
             }
         }
@@ -41,6 +44,7 @@ BiRel(Jira, Valkyrie, "work  item", "rest  api")
 Rel(PcapRecorder, FileStorage, "write  point  cloud  files", ".pcap")
 BiRel(TestPipeline, FileStorage, "uses  .pcap  files")
 Rel(TestPipeline, Database, "target  extraction  results")
+Rel(TestPipeline, Database, ".pcap metadata")
 Rel(Valkyrie, DFTLib, "uses")
 BiRel(DFTLib, Lidar, "sensor  commands / responses", "doip")
 Rel(DFTLib, OpenTelemetry, "traces")

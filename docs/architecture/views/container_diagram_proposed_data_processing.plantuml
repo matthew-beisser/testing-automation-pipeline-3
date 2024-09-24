@@ -1,0 +1,57 @@
+@startuml container_diagram_proposed_data_processing
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' Elements
+Enterprise_Boundary(System, "[Container] Phase X: Testing Automation Pipeline (Data Collection)") {
+    Enterprise_Boundary(CloudSystem, "External Network") {    
+        Container_Ext(Jama, "Requirements Management", "Jama", "Store test evidence.")   
+        
+        Enterprise_Boundary(FacilitySystem, "Test Facility") {
+            Person(Tester2, "Test Engineer 2")
+
+            System_Boundary(TestPipelineSystem, "Pipeline Automation") {
+
+                System_Ext(TestWorkStation, "Test Workstation", "")
+
+                Container(FileStorage, "File Storage", "NAS", "Storage location for unprocessed .pcap files and metadata.")            
+                System_Boundary(Docker, "Docker (Linux)")  {
+                    System_Boundary(PipelineSoftware, "Pipeline Software") {
+                        Container(FileMonitor, "File Monitor", "python", "Process incoming .pcap and metadata files.")
+                        Container(DataAnalysis, "Data Analysis", "python", "Perform target extraction and analysis.")
+                        Container(FrontEnd, "Front End", "Grafana or similar", "Web interface.")
+                        Container(DataCompilation, "Data Compilation", "python", "Create output based on analysis results\n e.g. .csv, images, html, reports.")
+                    }
+                    Container(OpenTelemetry, "OpenTelemetry Collector", "Jaegar, Loki or similar", "Collect sensor test traces and forward to storage.")
+                    Container_Boundary(DatabaseCollection, "Database") {
+                        ContainerDb(Database, "Database", "TBD", "Storage backend for extraction results and other TBD data.")
+                        ContainerDb(TraceDatabase, "Trace Database", "NoSQL, ElasticSearch, or other TBD", "Storage backend for tracing data.")
+                    }                    
+                }
+            }
+        }
+    }
+}
+
+' Layout rules
+' Lay_U(FileMonitor, FrontEnd)
+Lay_R(DataAnalysis, FileMonitor)
+Lay_U(DatabaseCollection, PipelineSoftware)
+Lay_U(FileStorage, PipelineSoftware)
+
+' Relationships
+Rel(Tester2, FrontEnd, "data  request")
+Rel(FrontEnd, Tester2, "data  summary,\n reports,\n images,\n notifications")
+Rel(FrontEnd, DataCompilation, "data  request")
+BiRel(DataCompilation, DatabaseCollection, "request / retrieve  analysis  results", "query")
+Rel(TestWorkStation, OpenTelemetry, "traces")
+Rel(TestWorkStation, FileStorage, "write  point  cloud  files  with  metadata", ".pcap")
+Rel(FileMonitor, FileStorage, "retrieve  pcap  metadata")
+Rel(FileMonitor, Database, ".pcap metadata")
+BiRel(DataAnalysis, FileStorage, "uses  .pcap  files")
+Rel(DataAnalysis, DatabaseCollection, "target  extraction  results")
+Rel(OpenTelemetry, TraceDatabase, "traces")
+Rel(FrontEnd, Jama, "push test  evidence", "rest  api")
+
+@enduml
+

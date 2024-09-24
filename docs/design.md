@@ -12,7 +12,7 @@ Last Updated: 2024-mm-dd
 - [Goals and Non-Goals](#goals-and-non-goals)
 - [Milestones](#milestones)
 - [Existing Solution](#existing-solution)
-  - [Entities](#entities)
+  - [Existing Entities](#existing-entities)
     - [Jira](#jira)
     - [Valkyrie Workstation](#valkyrie-workstation)
       - [PCAP Naming Convention](#pcap-naming-convention)
@@ -22,7 +22,14 @@ Last Updated: 2024-mm-dd
   - [Existing Data Collection](#existing-data-collection)
   - [Existing Data Processing](#existing-data-processing)
 - [Proposed Solution](#proposed-solution)
-  - [New Entities](#new-entities)
+  - [Proposed Entities](#proposed-entities)
+    - [Jira (Existing)](#jira-existing)
+    - [Valkyrie Workstation (Existing)](#valkyrie-workstation-existing)
+    - [Pcap Recorder (Replacement)](#pcap-recorder-replacement)
+    - [NFS File Storage (Existing)](#nfs-file-storage-existing)
+    - [DFT](#dft)
+    - [OpenTelemetry Collector](#opentelemetry-collector)
+  - [System Overview](#system-overview)
   - [Proposed Data Collection](#proposed-data-collection)
   - [Proposed Data Processing](#proposed-data-processing)
 - [Alternative Solutions](#alternative-solutions)
@@ -128,7 +135,7 @@ In addition to describing the current implementation, you should also walk throu
 A user story is a great way to frame this. Keep in mind that your system might have different types of users with different use cases.
 -->
 
-### Entities
+### Existing Entities
 
 #### Jira
 
@@ -154,6 +161,7 @@ The output of these tests, currently telnet .csv and point cloud .pcap captures,
 Valkyrie will be kept as part of the new process.
 
 Repository: [SystemTestTools](https://github.com/luminartech/SystemTestTools)
+
 POC: Jeff Hawkins
 
 **- Outstanding Questions**
@@ -212,6 +220,7 @@ The Iris, Iris+, or Halo (future) sensor under test.
 The data analysis is performed by a Matlab application which performs target extraction on the test pcaps.
 
 Repository: [IrisDataTools](https://github.com/luminartech/IrisDataTools)
+
 POC: Daniel Ferrone
 
 **- Outstanding Questions**
@@ -233,13 +242,76 @@ The existing data processing process for the FT2 testing is shown in the diagram
 
 ## Proposed Solution
 
-### New Entities
+### Proposed Entities
+
+<!-- #### Jira
+
+#### Valkyrie Workstation
+
+##### PCAP Naming Convention
+
+#### NFS File Storage
+
+#### Lidar -->
+
+#### Jira (Existing)
+
+[Jira (Existing)](#jira)
+
+#### Valkyrie Workstation (Existing)
+
+[Valkyrie Workstation (Existing)](#valkyrie-workstation)
+
+#### Pcap Recorder (Replacement)
+
+\[External\]
+
+This is a replacement for recording the .pcap test data with Wireshark.
+It will still be executed by Valkyrie in some fashion.
+
+The pcap file will no longer be written with metadata in the filename.
+
+Instead the filename will be:
+
+- Some combination of the name of the test run and a date timestamp.
+- A metadata file name the same as above with a different extension.
+
+**- Outstanding Questions**
+
+- Does this just need to be a CLI tool?
+- Use an existing python pcap library? PyPCAPKit
+- Just use wireshark on commandline?
+
+#### NFS File Storage (Existing)
+
+\[Internal\]
+
+[NFS File Storage (existing)](#nfs-file-storage)
+
+The NAS will hold the PCAP files indefinitely.
+
+**- Outstanding Questions**
+
+- It's unclear where the NAS needs to exist in the entire solution.
+- Could it host the databases and the Docker Container mount the?
+- Is storing the pcaps necessary?
+  - If so, what about archiving, storing, database storage path, etc.
+
+#### DFT
+
+#### OpenTelemetry Collector
+
+### System Overview
+
+The proposed system level diagram the FT2 testing is shown in the diagram below.
+
+![system_context_diagram](architecture/views/system_context_diagram.svg)
 
 ### Proposed Data Collection
 
 The proposed data collection process for the FT2 testing is shown in the diagram below.
 
-![container_diagram_phase_x_data_collection](architecture/views/container_diagram_phase_x_data_collection.svg)
+![container_diagram_proposed_data_collection](architecture/views/container_diagram_proposed_data_collection.svg)
 
 ### Proposed Data Processing
 

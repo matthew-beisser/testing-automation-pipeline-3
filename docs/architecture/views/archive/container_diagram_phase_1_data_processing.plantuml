@@ -21,6 +21,7 @@ Enterprise_Boundary(System, "[Container] Phase 1: Testing Automation Pipeline") 
                     ContainerDb(Database, "Database", "SQLite", "Local database")
                     Container(DataAnalysis, "Data Analysis", "python", "Perform target extraction and analysis")
                     Container(DataCompilation, "Data Compilation", "python", "Create output based on analysis results\n e.g. .csv, images, html, reports")
+                    Container(FrontEnd, "Front End", "Grafana or similar", "Web interface")
                 }
             }
         }
@@ -36,8 +37,8 @@ BiRel(DataAnalysis, Database, "request / retrieve data", "sql")
 BiRel(DataCompilation, Database, "request / retrieve  analysis  results", "sql")
 Rel_Neighbor(FileMonitor, Database, "store  test  data", "sql")
 
-Rel(Tester2, DataCompilation, "data\n  request")
-Rel(DataCompilation, Tester2, "data  summary,\n reports,\n images,\n notifications")
+Rel(Tester2, FrontEnd, "data\n  request")
+Rel(FrontEnd, Tester2, "data  summary,\n reports,\n images,\n notifications")
 Rel(DataCompilation, Jama, "test  evidence", "rest  api")
 
 @enduml
