@@ -44,38 +44,42 @@ Last Updated: 2024-mm-dd
 ## Overview
 
 <!--
-A high level summary that every engineer at the company should understand and use to decide if it’s useful for them to read the rest of the doc. It should be 3 paragraphs max.
+A high level summary that every engineer at the company should understand and use to decide if it's useful for them to read the rest of the doc. It should be 3 paragraphs max.
 -->
 
 An integral step in the manufacturing of lidar is ensuring they perform to the system requirements.
-While each sensor at the manufacturing facility undergoes tests before leaving the site, the Product Assurance Team performs additional tests on select batches of sensors.
+While each sensor at a manufacturing facility undergoes a series of tests before leaving that facility, it's necessary to perform more robust testing to ensure no sensor performance degredation occurs over time.
+This extra step, referred to as parameter testing (and monitoring), involves adjusting inputs to the sensor within certain boundaries.
+The goal is to observe the sensor's output and confirm it operates as anticipated under the varied conditions.
 
-This additional testing, known as parameter testing, is conducted to verify the performance, functionality, and reliability of the lidar.
-It involves setting the parameters to specific values and then assessing the lidar's behavior.
-The results are then compared against expected outcomes to identify any potential issues or signs of degradation in the lidar's performance.
+The System Test Team is responsible for performing these additional tests on select batches of sensors.
+Note that there are different levels of parameter testing.
+These can range from comprehensive testing that covers system-level requirements, to more limited testing that focuses on a subset of these parameters, or even continuous monitoring of certain intrinsic parameters during operation.
 
-There are different levels of parameter testing, which can range from comprehensive testing that covers system-level requirements, to more limited testing that focuses on a subset of these parameters, or even continuous monitoring of certain intrinsic parameters during operation.
-
-A table of the 3 parameter test defintions for Iris and Iris+ is reproduced below.
+The 3 different type of parameter test defintions for Iris and Iris+ is shown in the table below.
 
 |                                     Iris (VCC) Test ID                                     | Description for Iris | Iris+ (MB) Test ID |   Description for Iris+ | Luminar Test ID |             Luminar Description              |
-| :----------------------------------------------------------------------------------------: | :------------------: | :----------------- | ----------------------: | :-------------: | :------------------------------------------: |
-| [FT1](https://luminar.jamacloud.com/perspective.req#/testPlans/2252407/home/?projectId=87) |  Functional Test 1   | P02                | Parameter Testing Small |       FPT       |    Functional Parameter Testing (Limited)    |
-| [FT2](https://luminar.jamacloud.com/perspective.req#/testPlans/1824961/home/?projectId=87) |  Functional Test 2   | P03                | Parameter Testing Large |       APT       | Acceptance Parameter Testing (Comprehensive) |
-| [FT3](https://luminar.jamacloud.com/perspective.req#/testPlans/2319205/home/?projectId=87) |  Functional Test 3   | P01                |   Continuous Monitoring |       CPM       |       Continuous Parameter Monitoring        |
+| :----------------------------------------------------------------------------------------: | :------------------: | :----------------: | ----------------------: | :-------------: | :------------------------------------------: |
+| [FT1](https://luminar.jamacloud.com/perspective.req#/testPlans/2252407/home/?projectId=87) |  Functional Test 1   |        P02         | Parameter Testing Small |       FPT       |    Functional Parameter Testing (Limited)    |
+| [FT2](https://luminar.jamacloud.com/perspective.req#/testPlans/1824961/home/?projectId=87) |  Functional Test 2   |        P03         | Parameter Testing Large |       APT       | Acceptance Parameter Testing (Comprehensive) |
+| [FT3](https://luminar.jamacloud.com/perspective.req#/testPlans/2319205/home/?projectId=87) |  Functional Test 3   |        P01         |   Continuous Monitoring |       CPM       |       Continuous Parameter Monitoring        |
 
 While the exact specifications of these tests are outside the scope of this document (though details can be found [here](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl))
-the testing process, how test engineers collect data, and how that proccess can be automated is the focus of this design.
+the testing process, how test engineers collect data, and how that process can be automated is the focus of this design.
 
 ## Context
 
 <!-- 
-A description of the problem at hand, why this project is necessary, what people need to know to assess this project, and how it fits into the technical strategy, product strategy, or the team’s quarterly goals.
+A description of the problem at hand, why this project is necessary, what people need to know to assess this project, and how it fits into the technical strategy, product strategy, or the team's quarterly goals.
 -->
 
 This document describes the current [FT2 process](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl) as well as the proposed automation for parts of this process.
+The complete automation of the FT2 process is outside the scope of this design, and a test engineer will still be required.
 
-The Product Assurance Team has automated several of the individual steps required for FT2 testing.
+It is understood that the FT2 automation process needs to be architectured in a manner that will allow the eventual support of additional test processes, i.e., FT1 and FT3 as well as Iris+ (P01 - P03), and Halo.
+However, for the purposes of this design, those additional test processes are considered out of scope.
+
+The System Test Team has automated several of the individual steps required for FT2 testing.
 These individual automation steps have allowed the team to put together their current semi-automated process.
 
 The current FT2 process relies upon a series of steps requiring users to input file names, copy files to various locations, trigger data analysis, and extract and manipulate data from .csv files to produce reports.
@@ -83,9 +87,6 @@ All of these steps are prone to user error which causes delays.
 Perhaps more importantly though, the ability to view the test data over time against KPIs as well as interogating the report analysis is lacking. This makes trend analysis of sensor issues not possible without investing an extradorinary amount of time.
 
 The proposed software solution is to
-
-The complete automation of the FT2 process is not currently feasible.
-A test engineer will still be required even with the proposed automation solution.
 
 ## Goals and Non-Goals
 
@@ -101,16 +102,16 @@ The proposed FT2 automation steps will address:
 <!--
 The Goals section should:
 
-    describe the user-driven impact of your project — where your user might be another engineering team or even another technical system
-    specify how to measure success using metrics — bonus points if you can link to a dashboard that tracks those metrics
+    - describe the user-driven impact of your project — where your user might be another engineering team or even another technical system
+    - specify how to measure success using metrics — bonus points if you can link to a dashboard that tracks those metrics
 
-Non-Goals are equally important to describe which problems you won’t be fixing so everyone is on the same page.
+Non-Goals are equally important to describe which problems you won't be fixing so everyone is on the same page.
 -->
 
 ## Milestones
 
 <!-- 
-A list of measurable checkpoints, so your PM and your manager’s manager can skim it and know roughly when different parts of the project will be done. I encourage you to break the project down into major user-facing milestones if the project is more than 1 month long.
+A list of measurable checkpoints, so your PM and your manager's manager can skim it and know roughly when different parts of the project will be done. I encourage you to break the project down into major user-facing milestones if the project is more than 1 month long.
 
 Use calendar dates so you take into account unrelated delays, vacations, meetings, and so on. It should look something like this:
 
@@ -350,7 +351,7 @@ I like including this section, because people often treat this as an afterthough
 ## Open Questions
 
 <!--
-Any open issues that you aren’t sure about, contentious decisions that you’d like readers to weigh in on, suggested future work, and so on. A tongue-in-cheek name for this section is the “known unknowns”.
+Any open issues that you aren't sure about, contentious decisions that you'd like readers to weigh in on, suggested future work, and so on. A tongue-in-cheek name for this section is the “known unknowns”.
 -->
 
 - Is this project approved?
@@ -362,7 +363,7 @@ Any open issues that you aren’t sure about, contentious decisions that you’d
 <!--
 This section is mostly going to be read only by the engineers working on this project, their tech leads, and their managers. Hence this section is at the end of the doc.
 
-Essentially, this is the breakdown of how and when you plan on executing each part of the project. There’s a lot that goes into scoping accurately, so you can read this post to learn more about scoping.
+Essentially, this is the breakdown of how and when you plan on executing each part of the project. There's a lot that goes into scoping accurately, so you can read this post to learn more about scoping.
 
-I tend to also treat this section of the design doc as an ongoing project task tracker, so I update this whenever my scoping estimate changes. But that’s more of a personal preference.
+I tend to also treat this section of the design doc as an ongoing project task tracker, so I update this whenever my scoping estimate changes. But that's more of a personal preference.
 -->

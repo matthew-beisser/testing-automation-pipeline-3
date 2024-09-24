@@ -34,7 +34,6 @@ Enterprise_Boundary(System, "[Container] Phase X: Testing Automation Pipeline (D
 }
 
 ' Layout rules
-' Lay_U(FileMonitor, FrontEnd)
 Lay_R(DataAnalysis, FileMonitor)
 Lay_U(DatabaseCollection, PipelineSoftware)
 Lay_U(FileStorage, PipelineSoftware)

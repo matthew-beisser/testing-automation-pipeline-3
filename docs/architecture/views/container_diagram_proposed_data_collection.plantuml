@@ -21,10 +21,7 @@ Enterprise_Boundary(System, "[Container] Phase X: Testing Automation Pipeline (D
             System_Boundary(TestPipelineSystem, "Pipeline Automation") {
                 Container(FileStorage, "File Storage", "nas", "Storage location for unprocessed .pcap files.")            
                 System_Boundary(Docker, "Docker (Linux)")  {
-                    ' System_Boundary(PipelineSoftware, "Pipeline Software") {
-                        ' Container(FileMonitor, "File Monitor", "Process incoming test file results")
-                        System(TestPipeline, "Pipeline Software", "Perform target extractation, and store results.")
-                    ' }
+                    System(TestPipeline, "Pipeline Software", "Perform target extractation, and store results.")
                     Container(OpenTelemetry, "OpenTelemetry Collector", "Jaegar, Loki or similar", "Collect sensor test traces and forward to storage.")
                     Container_Boundary(DatabaseCollection, "Database") {
                         ContainerDb(Database, "Database", "TBD", "Storage backend for extraction results (and ???).")
