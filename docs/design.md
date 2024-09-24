@@ -7,9 +7,11 @@ Last Updated: 2024-mm-dd
 <!-- mdformat-toc start --slug=github --no-anchors --maxlevel=6 --minlevel=2 -->
 
 - [Table of Contents](#table-of-contents)
+- [Document Notes](#document-notes)
 - [Overview](#overview)
 - [Context](#context)
-- [Goals and Non-Goals](#goals-and-non-goals)
+- [Goals](#goals)
+- [Non-Goals](#non-goals)
 - [Milestones](#milestones)
 - [Existing Solution](#existing-solution)
   - [Existing Entities](#existing-entities)
@@ -27,7 +29,7 @@ Last Updated: 2024-mm-dd
     - [Valkyrie Workstation (Existing)](#valkyrie-workstation-existing)
     - [Pcap Recorder (Replacement)](#pcap-recorder-replacement)
     - [NFS File Storage (Existing)](#nfs-file-storage-existing)
-    - [DFT](#dft)
+    - [Diagnostics and Flashing Tool (DFT)](#diagnostics-and-flashing-tool-dft)
     - [OpenTelemetry Collector](#opentelemetry-collector)
   - [System Overview](#system-overview)
   - [Proposed Data Collection](#proposed-data-collection)
@@ -39,7 +41,15 @@ Last Updated: 2024-mm-dd
 
 <!-- mdformat-toc end -->
 
-<!-- https://www.freecodecamp.org/news/how-to-write-a-good-software-design-document-66fcf019569c/ -->
+<!-- 
+Document template taken from:
+https://www.freecodecamp.org/news/how-to-write-a-good-software-design-document-66fcf019569c/
+-->
+
+## Document Notes
+
+The software architecture diagrams in this document use the [C4 model](https://c4model.com/).
+See [here](https://youtu.be/x2-rSnhpw0g) for a brief tutorial.
 
 ## Overview
 
@@ -67,6 +77,8 @@ The 3 different type of parameter test defintions for Iris and Iris+ is shown in
 While the exact specifications of these tests are outside the scope of this document (though details can be found [here](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl))
 the testing process, how test engineers collect data, and how that process can be automated is the focus of this design.
 
+**It is important to note that this automated process is required as part of the transition of manufacturing to TPK(?) in 2025/2026.**
+
 ## Context
 
 <!-- 
@@ -74,39 +86,51 @@ A description of the problem at hand, why this project is necessary, what people
 -->
 
 This document describes the current [FT2 process](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl) as well as the proposed automation for parts of this process.
+
 The complete automation of the FT2 process is outside the scope of this design, and a test engineer will still be required.
 
-It is understood that the FT2 automation process needs to be architectured in a manner that will allow the eventual support of additional test processes, i.e., FT1 and FT3 as well as Iris+ (P01 - P03), and Halo.
+It is understood that the FT2 automation process needs to be architectured in a manner that will allow the eventual support of additional test processes, i.e., FT1 and FT3 for Iris, as well as Iris+ (P01 - P03), and Halo.
 However, for the purposes of this design, those additional test processes are considered out of scope.
 
-The System Test Team has automated several of the individual steps required for FT2 testing.
-These individual automation steps have allowed the team to put together their current semi-automated process.
+The current FT2 process is a primarly manual process with a few automation steps built in for convenience.
+It primarily consists of a series of steps requiring users to input file names, copy files to various locations, trigger data analysis for specific test runs, and extract and manipulate data from .csv files to produce reports.
+These steps are prone to user error which causes delays.
+Perhaps more importantly though, the ability to view the test data over time against KPIs as well as interogating the test data over time is lacking.
+This makes the trend analysis of sensor parameter testing not possible without investing an extradorinary amount of time.
 
-The current FT2 process relies upon a series of steps requiring users to input file names, copy files to various locations, trigger data analysis, and extract and manipulate data from .csv files to produce reports.
-All of these steps are prone to user error which causes delays.
-Perhaps more importantly though, the ability to view the test data over time against KPIs as well as interogating the report analysis is lacking. This makes trend analysis of sensor issues not possible without investing an extradorinary amount of time.
+## Goals
 
-The proposed software solution is to
+The proposed FT2 solution will address:
 
-## Goals and Non-Goals
-
-The proposed FT2 automation steps will address:
-
-- Test output files not being transfered
+- The manual processing of test output data
+- Retrieving sensor diagnostics over DOIP
 - Storing sensor test output in a commonly accessible and searchable way
 - Automatic triggering of data analysis (target extraction)
+- Porting the existing Matlab target extraction code to Python
 - Storing target extraction results in a commonly accessible and searchable way
 - Reducing the time required for analysis and report creation
-- The lack of dashboards for viewing data against KPIs
+- Providing dashboards for viewing data against KPIs
+- The initial deployment and upgrade mechanisms for the software
 
 <!--
 The Goals section should:
 
     - describe the user-driven impact of your project — where your user might be another engineering team or even another technical system
     - specify how to measure success using metrics — bonus points if you can link to a dashboard that tracks those metrics
+-->
 
+## Non-Goals
+
+<!--
 Non-Goals are equally important to describe which problems you won't be fixing so everyone is on the same page.
 -->
+
+The proposed FT2 solution will intentionally **NOT** address:
+
+- Fully automating FT2
+- Processing telnet data in the existing workflow
+- Replacing Valkyrie
+- Upgrading Valkyrie
 
 ## Milestones
 
@@ -123,10 +147,13 @@ End Date: Add feature X, Y, Z to new system: July 14th, 2018
 Add an [Update] subsection here if the ETA of some of these milestone changes, so the stakeholders can easily see the most up-to-date estimates.
 -->
 
-FTD open telemetry tracing complete
-Distributed Tracing Solution (Jaeggar, Grafana Loki, etc) tested and choosen
-
-- Corresponding database selected
+- File outputs from tests
+- FTD open telemetry tracing complete for VCC
+- Docker Linux instance stood up
+- Distributed Tracing Solution (Jaeggar, Grafana Loki, openobserve.ai, etc) tested and choosen
+  - Corresponding database selected
+- Matlab target extraction running with single pcap
+  - Code ported to Python
 
 ## Existing Solution
 
@@ -142,12 +169,12 @@ A user story is a great way to frame this. Keep in mind that your system might h
 
 A Jira board is used along with epics, stories, and tasks to track the current testing tasks.
 
-An epic is used to track a batch of sensor to test, e.g. [Iris Slim V1- PV (70-0025007/008)](https://luminartech.atlassian.net/browse/TV-5628)
+An epic is used to track a batch of sensor to test, e.g. [Iris Slim V1 - PV (70-0025007/008)](https://luminartech.atlassian.net/browse/TV-5628)
 
-Stories are used to group tasks in an adhoc manner. E.g. [PV: Leg1 ReTest_PV1-002753](https://luminartech.atlassian.net/browse/TV-8426)
+Stories are used to group tasks in an adhoc manner, e.g. [PV: Leg1 ReTest_PV1-002753](https://luminartech.atlassian.net/browse/TV-8426)
 
 Tasks (not currently linked to epics) are used to track a certain type of test result for multiple sensors.
-A single sensor's test completion is tracked as a comment. E.g. [PV Retest Leg 1 FT1 Data Collection - Post FW Update](https://luminartech.atlassian.net/browse/TV-8763)
+A single sensor's test completion is tracked as a comment, e.g. [PV Retest Leg 1 FT1 Data Collection - Post FW Update](https://luminartech.atlassian.net/browse/TV-8763)
 
 **- Outstanding Questions**
 
@@ -173,6 +200,7 @@ POC: Jeff Hawkins
   - Seems like the answer is [yes](https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z0000019VpgSAE&l=en-US), thought not sure on the level of effort.
 - PCAP recording is currently done with Wireshark, is that going to be replaced with a homegrown app?
   - Is this in scope, and who will do this work?
+  - Could we switch this to another cli tool like PyPCAPKit (Python package)?
 
 ##### PCAP Naming Convention
 
@@ -182,7 +210,7 @@ The output file name is based upon the test parameters. E.g. `282_200m_28fov_n4o
 **- Outstanding Questions**
 
 - The file names contain metadata that presumably is relevant to the data analysis phase.
-  - Parsing these strings seems error prone and complicated.\\
+  - Parsing these strings seems error prone and complicated.
     Can we write a pcap file with some basic identifiers in the name, but then store the metadata in a corresponding .csv or .json file?
 
 #### NFS File Storage
@@ -212,7 +240,7 @@ Iris_Sensor_Head_XX-YYYY-ZZZ        - (XX-YYYY-ZZZ is the numeric sensor hardwar
 
 \[External System\]
 
-The Iris, Iris+, or Halo (future) sensor under test.
+The Iris sensor under test. Iris+ and Halo support are [out of scope](#context) for the initial FT2 design.
 
 #### Data Analysis (Matlab)
 
@@ -227,7 +255,7 @@ POC: Daniel Ferrone
 **- Outstanding Questions**
 
 - How can I run target extraction manually on a single pcap file?
-- What are the outputs, how many are there, and how are they used in reporting?
+- What are the outputs, how many are there, and how are they used in reporting? (Mehdi Chaouqi)
 
 ### Existing Data Collection
 
@@ -280,8 +308,8 @@ Instead the filename will be:
 **- Outstanding Questions**
 
 - Does this just need to be a CLI tool?
-- Use an existing python pcap library? PyPCAPKit
-- Just use wireshark on commandline?
+- What about just using wireshark on the commandline?
+- Can we use an existing python pcap library like PyPCAPKit?
 
 #### NFS File Storage (Existing)
 
@@ -293,28 +321,73 @@ The NAS will hold the PCAP files indefinitely.
 
 **- Outstanding Questions**
 
+- Who maintains this resource (backups, data transfers, etc) once manufacturing is moved?
 - It's unclear where the NAS needs to exist in the entire solution.
-- Could it host the databases and the Docker Container mount the?
+- Could it host the databases and the Docker Container mount them?
 - Is storing the pcaps necessary?
-  - If so, what about archiving, storing, database storage path, etc.
+  - If so, what about backups, archiving, storing, database storage path, etc.
 
-#### DFT
+#### Diagnostics and Flashing Tool (DFT)
+
+\[External\]
+
+A command line tool for issuing diagnostics commands to a luminar sensor.
+It replaces telnet and allows parameters to be read from the sensor via DOIP.
+
+DFT uses OpenTelemetry spans as a way to measure the request and response time of a parameter over DOIP as well as recording the parameter's value.
+
+Repository: [DFT](https://github.com/luminartech/dft)
+
+POC: Zach Heylmun
+
+**- Outstanding Questions**
+
+- There still seems to be a bit of work here by Zach in order to get is usable for testing.
+  - Automate timing of read requests
+  - Proof of concept for Mehdi
+  - Common generate of DIDs (data identifiers)?
+- How to integrate this tool with Valkyrie?
 
 #### OpenTelemetry Collector
 
+Open source or off the shelf solution to collect the spans emitted by \[#diagnostics-and-flashing-tool-(DFT)\] and store them in a database.
+
+Many solutions exist for this.
+Current contenders are:
+
+- Yaegar
+
+  - Complicated. Needs storage or forwarding mechanism.
+  - Supports: Cassandra, ElasticSearch
+
+- Grafana Loki (for logs, not traces)
+
+  - Single Store TSDB (indexed database)
+  - File System
+
+- Grafana Tempo
+
+- OpenObserve
+
+  - No external data connections
+
 ### System Overview
 
-The proposed system level diagram the FT2 testing is shown in the diagram below.
+The proposed system level diagram the FT2 automation testing is shown in the diagram below.
 
 ![system_context_diagram](architecture/views/system_context_diagram.svg)
 
 ### Proposed Data Collection
 
-The proposed data collection process for the FT2 testing is shown in the diagram below.
+The proposed data collection process for the FT2 automation testing is shown in the diagram below.
 
-![container_diagram_proposed_data_collection](architecture/views/container_diagram_proposed_data_collection.svg)
+![container_diagram_proposal_data_collection](architecture/views/container_diagram_proposal_data_collection.svg)
 
 ### Proposed Data Processing
+
+The proposed data processing for the FT2 automation testing is shown in the diagram below.
+
+![container_diagram_proposal_data_processing](architecture/views/container_diagram_proposal_data_processing.svg)
 
 <!--
 The proposed data processing process for the FT2 testing is shown in the diagram below.
@@ -338,6 +411,8 @@ I like including this section, because people often treat this as an afterthough
 -->
 
 ## Cross-Team Impact
+
+The biggest dependency on
 
 <!--
 - How will this increase on call and dev-ops burden?

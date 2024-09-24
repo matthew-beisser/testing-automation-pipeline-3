@@ -1,9 +1,9 @@
-@startuml container_diagram_proposed_data_collection
+@startuml container_diagram_proposal_data_collection
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
 ' Elements
-Enterprise_Boundary(System, "[Container] Phase X: Testing Automation Pipeline (Data Collection)") {
+Enterprise_Boundary(System, "[Container] Proposal: Testing Automation Pipeline (Data Collection)") {
     Enterprise_Boundary(CloudSystem, "External Network") {    
         Container_Ext(Jira, "Issue Tracking", "Jira", "Test engineer task tracking.")
         
