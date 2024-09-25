@@ -12,7 +12,7 @@ Enterprise_Boundary(System, "[System Context] Testing Automation Pipeline") {
 }
 
 ' Relationships
-Rel_Neighbor(Tester, DataCollection, "initiates")
+Rel_Neighbor(Tester, DataCollection, "initiates  test")
 Rel(DataCollection, DataProcessor, "triggers")
 Rel_Neighbor(DataProcessor, DataAnalyst, "test  results")
 

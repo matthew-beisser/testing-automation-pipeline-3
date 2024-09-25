@@ -15,22 +15,27 @@ Last Updated: 2024-mm-dd
 - [Milestones](#milestones)
 - [Existing Solution](#existing-solution)
   - [Existing Entities](#existing-entities)
+    - [Data Analysis (Target Extraction - Matlab)](#data-analysis-target-extraction---matlab)
     - [Jira](#jira)
+    - [Lidar](#lidar)
+    - [NFS File Storage](#nfs-file-storage)
     - [Valkyrie Workstation](#valkyrie-workstation)
       - [PCAP Naming Convention](#pcap-naming-convention)
-    - [NFS File Storage](#nfs-file-storage)
-    - [Lidar](#lidar)
-    - [Data Analysis (Matlab)](#data-analysis-matlab)
   - [Existing Data Collection](#existing-data-collection)
   - [Existing Data Processing](#existing-data-processing)
 - [Proposed Solution](#proposed-solution)
   - [Proposed Entities](#proposed-entities)
-    - [Jira (Existing)](#jira-existing)
-    - [Valkyrie Workstation (Existing)](#valkyrie-workstation-existing)
-    - [Pcap Recorder (Replacement)](#pcap-recorder-replacement)
-    - [NFS File Storage (Existing)](#nfs-file-storage-existing)
+    - [Database](#database)
+    - [Data Compilation (TBD)](#data-compilation-tbd)
+    - [Data Analysis](#data-analysis)
     - [Diagnostics and Flashing Tool (DFT)](#diagnostics-and-flashing-tool-dft)
+    - [File Monitor](#file-monitor)
+    - [Frontend](#frontend)
+    - [Jira (Existing)](#jira-existing)
+    - [NAS (File Storage - Existing)](#nas-file-storage---existing)
     - [OpenTelemetry Collector](#opentelemetry-collector)
+    - [Pcap Recorder (Replacement)](#pcap-recorder-replacement)
+    - [Valkyrie Workstation (Existing)](#valkyrie-workstation-existing)
   - [System Overview](#system-overview)
   - [Proposed Data Collection](#proposed-data-collection)
   - [Proposed Data Processing](#proposed-data-processing)
@@ -165,7 +170,24 @@ A user story is a great way to frame this. Keep in mind that your system might h
 
 ### Existing Entities
 
+#### Data Analysis (Target Extraction - Matlab)
+
+\[External System\]
+
+The data analysis is performed by a Matlab application which performs target extraction on the test pcaps.
+
+Repository: [IrisDataTools](https://github.com/luminartech/IrisDataTools)
+
+POC: Daniel Ferrone
+
+**- Outstanding Questions**
+
+- How can I run target extraction manually on a single pcap file?
+- What are the outputs, how many are there, and how are they used in reporting? (Mehdi Chaouqi)
+
 #### Jira
+
+\[External System\]
 
 A Jira board is used along with epics, stories, and tasks to track the current testing tasks.
 
@@ -176,7 +198,34 @@ Stories are used to group tasks in an adhoc manner, e.g. [PV: Leg1 ReTest_PV1-00
 Tasks (not currently linked to epics) are used to track a certain type of test result for multiple sensors.
 A single sensor's test completion is tracked as a comment, e.g. [PV Retest Leg 1 FT1 Data Collection - Post FW Update](https://luminartech.atlassian.net/browse/TV-8763)
 
-**- Outstanding Questions**
+#### Lidar
+
+\[External System\]
+
+The Iris sensor under test. Iris+ and Halo support are [out of scope](#context) for the initial FT2 design.
+
+#### NFS File Storage
+
+\[External System\]
+
+A common network file share (NFS) used to store output test data before it is processed.
+It's a NAS that is accessible from all workstations.
+
+The current base location for FT2 data is: `\\mco1-fs03\Workgroups\validation-data\`
+
+Example output location: `Iris_Sensor_Head_70-0025-010\P32406697T00003188VAE7E3\`
+
+```shell
+Iris_Sensor_Head_XX-YYYY-ZZZ        - (XX-YYYY-ZZZ is the numeric sensor hardware pedigree) 
+└── <Sensor Serial Number> 
+    ├── FT2-Pre
+    │   ├── Adams_YYYYMMDD_HHMM     - (near field station)
+    │   ├── Eve_YYYYMMDD_HHMM       - (near field station)
+    │   ├── Bishop_YYYYMMDD_HHMM    - (long range test facility)
+    │   └── Skippy_YYYYMMDD_HHMM    - (long range test facility)
+    └── FT2-Post
+        └── <Same layout as FT2-Post>
+```
 
 #### Valkyrie Workstation
 
@@ -213,50 +262,6 @@ The output file name is based upon the test parameters. E.g. `282_200m_28fov_n4o
   - Parsing these strings seems error prone and complicated.
     Can we write a pcap file with some basic identifiers in the name, but then store the metadata in a corresponding .csv or .json file?
 
-#### NFS File Storage
-
-\[External System\] -> \[Internal System\]
-
-A common network file share (NFS) used to store output test data before it is processed.
-It's a NAS that is accessible from all workstations.
-
-The current base location for FT2 data is: `\\mco1-fs03\Workgroups\validation-data\`
-
-Example output location: `Iris_Sensor_Head_70-0025-010\P32406697T00003188VAE7E3\`
-
-```shell
-Iris_Sensor_Head_XX-YYYY-ZZZ        - (XX-YYYY-ZZZ is the numeric sensor hardware pedigree) 
-└── <Sensor Serial Number> 
-    ├── FT2-Pre
-    │   ├── Adams_YYYYMMDD_HHMM     - (near field station)
-    │   ├── Eve_YYYYMMDD_HHMM       - (near field station)
-    │   ├── Bishop_YYYYMMDD_HHMM    - (long range test facility)
-    │   └── Skippy_YYYYMMDD_HHMM    - (long range test facility)
-    └── FT2-Post
-        └── <Same layout as FT2-Post>
-```
-
-#### Lidar
-
-\[External System\]
-
-The Iris sensor under test. Iris+ and Halo support are [out of scope](#context) for the initial FT2 design.
-
-#### Data Analysis (Matlab)
-
-\[External System\]
-
-The data analysis is performed by a Matlab application which performs target extraction on the test pcaps.
-
-Repository: [IrisDataTools](https://github.com/luminartech/IrisDataTools)
-
-POC: Daniel Ferrone
-
-**- Outstanding Questions**
-
-- How can I run target extraction manually on a single pcap file?
-- What are the outputs, how many are there, and how are they used in reporting? (Mehdi Chaouqi)
-
 ### Existing Data Collection
 
 The existing data collection process for the FT2 testing is shown in the diagram below.
@@ -273,23 +278,155 @@ The existing data processing process for the FT2 testing is shown in the diagram
 
 ### Proposed Entities
 
-<!-- #### Jira
+#### Database
 
-#### Valkyrie Workstation
+\[Internal\]
 
-##### PCAP Naming Convention
+Backend storage for traces and target extraction results.
 
-#### NFS File Storage
+**- Outstanding Questions**
 
-#### Lidar -->
+- What database to use for non tracing? PostgreSQL? MySQL (MariaDB)
+- Are 2 databases going to be needed? 1 for traces, 1 for other data? Seems like yes.
+  - If yes, should trace data be "transferred" to the other database in some way before/after target extraction? Maybe it doesn't matter as Grafana can have multiple data stores?
+
+#### Data Compilation (TBD)
+
+TBD
+
+#### Data Analysis
+
+\[Internal\]
+
+Performs target extraction and stores results.
+This Python code will replace the existing Matlab code.
+
+**- Outstanding Questions**
+
+- What is the estimated level of effort for this task?
+- How many algorithms are being run today?
+- How long does an analysis of a .pcap take?
+- What do the outputs look like?
+
+#### Diagnostics and Flashing Tool (DFT)
+
+\[External\]
+
+A command line tool for issuing diagnostics commands to a luminar sensor.
+It replaces telnet and allows parameters to be read from the sensor via DOIP.
+
+DFT uses OpenTelemetry spans as a way to measure the request and response time of a parameter over DOIP as well as recording the parameter's value.
+
+OpenTelemetry provides a general-purpose API and schema for logs, metrics, and traces.
+
+Logs are a time-ordered collection of discrete events, each of which contains a timestamp and some descriptive data.
+They are often used for debugging or auditing purposes.
+Logs can include any kind of data, such as error messages, information about the execution state, or user activities.
+They are highly flexible but can be more difficult to analyze due to their unstructured nature.
+
+Metrics are numerical values that represent the state of a system at a point in time.
+They are typically used for quantitative analysis of system performance and health.
+Metrics can be aggregated and analyzed over time to identify trends, spikes, or dips in system behavior.
+Examples of metrics include CPU usage, memory consumption, network latency, or the number of active users.
+
+A span represents a single unit of work within a system.
+It encapsulates information about a specific operation, including its start time, duration, associated attributes, and any events or errors during its execution.
+
+A trace is a collection of spans. They provide a detailed picture of a single operation or transaction as it flows through a distributed system.
+A trace captures the entire journey of a request, including all the services it interacts with and how long each interaction takes.
+Traces are essential for understanding the performance and behavior of complex, distributed systems.
+They can help identify bottlenecks, failures, or unexpected behavior in a system.
+
+Repository: [DFT](https://github.com/luminartech/dft)
+
+POC: Zach Heylmun
+
+**- Outstanding Questions**
+
+- Are only traces being provided, or is there other data to ingest?
+- There still seems to be a bit of work here by Zach in order to get is usable for testing.
+  - Automate timing of read requests
+  - Proof of concept for Mehdi
+  - Common generate of DIDs (data identifiers)?
+- How to integrate this tool with Valkyrie?
+
+#### File Monitor
+
+\[Internal\]
+
+Monitors a directory on the NAS for new test data that needs to be processed.
+
+Processing a test includes writing the .pcap metadata to the database, triggering the target extraction analysis, and performing any file cleanup or archiving.
+
+**- Outstanding Questions**
+
+- We should probably poll (once a minute) for tests to process.
+- What signals the "end" of test data output so the monitor knows to trigger target extraction? A single file in the same directory?
+- How is an interrupted test handled?
+- Does a test need to be archived (i.e. zipped and moved?)
+
+#### Frontend
+
+\[External\]
+
+GUI allowing for two disparate activities.
+
+1. View KPI data and export graphs
+1. View / administer(?) the system status
+
+Grafana seems like an obvious frontend choice.
+
+**- Outstanding Questions**
+
+- Will Grafana be adequate? What other options are there?
+- Is a cloud solution an option? Databricks is a cloud only.
+- What data is currently being exported for graphs and diagrams today?
 
 #### Jira (Existing)
 
-[Jira (Existing)](#jira)
+[Jira](#jira)
 
-#### Valkyrie Workstation (Existing)
+#### NAS (File Storage - Existing)
 
-[Valkyrie Workstation (Existing)](#valkyrie-workstation)
+\[Internal\]
+
+[NFS File Storage](#nfs-file-storage)
+
+**- Outstanding Questions**
+
+- Who maintains this resource (backups, data transfers, etc) once manufacturing is moved?
+- It's unclear where the NAS needs to exist in the entire solution.
+- Could it host the databases and the Docker Container mount them?
+- Is storing the pcaps necessary?
+  - What should the storage layout be?
+  - If so, what about backups, archiving, storing, database storage path, etc.
+
+#### OpenTelemetry Collector
+
+\[External\]
+
+Open source or COTS solution to collect the spans emitted by \[#diagnostics-and-flashing-tool-(DFT)\] and store them in a database.
+
+Current possible solution for storing and visualizing traces:
+
+- Yaegar
+  - Complicated. Needs storage or forwarding mechanism.
+  - Supports: Cassandra, ElasticSearch
+- OpenObserve
+  - No external data connections
+- Grafana Tempo
+- Grafana Loki (for logs, not traces)
+  - Single Store TSDB (indexed database)
+  - File System
+
+**- Outstanding Questions**
+
+- How important is the visualization of the trace data?
+- How do we tie the spans to the corresponding pcaps?
+- What backend database is used?
+  - It may not be possible to store the trace data and the target extraction analysis together (though that would be advantageous).
+  - Do we need 2 database? And do we need to transform the trace data and then also put it into SQL database that will also house the target extraction data?
+- Is a paid solution acceptable or possible here? Seems like no.
 
 #### Pcap Recorder (Replacement)
 
@@ -307,69 +444,15 @@ Instead the filename will be:
 
 **- Outstanding Questions**
 
+- Why don't we want to use wireshark on the commandline? Perhaps because of installing the package?
 - Does this just need to be a CLI tool?
-- What about just using wireshark on the commandline?
-- Can we use an existing python pcap library like PyPCAPKit?
+- Can we use an existing python pcap library like PyPCAPKit? No need to reinvent the wheel.
 
-#### NFS File Storage (Existing)
+#### Valkyrie Workstation (Existing)
 
-\[Internal\]
+[Valkyrie Workstation](#valkyrie-workstation)
 
-[NFS File Storage (existing)](#nfs-file-storage)
-
-The NAS will hold the PCAP files indefinitely.
-
-**- Outstanding Questions**
-
-- Who maintains this resource (backups, data transfers, etc) once manufacturing is moved?
-- It's unclear where the NAS needs to exist in the entire solution.
-- Could it host the databases and the Docker Container mount them?
-- Is storing the pcaps necessary?
-  - If so, what about backups, archiving, storing, database storage path, etc.
-
-#### Diagnostics and Flashing Tool (DFT)
-
-\[External\]
-
-A command line tool for issuing diagnostics commands to a luminar sensor.
-It replaces telnet and allows parameters to be read from the sensor via DOIP.
-
-DFT uses OpenTelemetry spans as a way to measure the request and response time of a parameter over DOIP as well as recording the parameter's value.
-
-Repository: [DFT](https://github.com/luminartech/dft)
-
-POC: Zach Heylmun
-
-**- Outstanding Questions**
-
-- There still seems to be a bit of work here by Zach in order to get is usable for testing.
-  - Automate timing of read requests
-  - Proof of concept for Mehdi
-  - Common generate of DIDs (data identifiers)?
-- How to integrate this tool with Valkyrie?
-
-#### OpenTelemetry Collector
-
-Open source or off the shelf solution to collect the spans emitted by \[#diagnostics-and-flashing-tool-(DFT)\] and store them in a database.
-
-Many solutions exist for this.
-Current contenders are:
-
-- Yaegar
-
-  - Complicated. Needs storage or forwarding mechanism.
-  - Supports: Cassandra, ElasticSearch
-
-- Grafana Loki (for logs, not traces)
-
-  - Single Store TSDB (indexed database)
-  - File System
-
-- Grafana Tempo
-
-- OpenObserve
-
-  - No external data connections
+<!-- End entities ----------------------------------------------------------------------------------------------------->
 
 ### System Overview
 
