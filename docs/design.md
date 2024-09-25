@@ -30,7 +30,7 @@ Last Updated: 2024-mm-dd
     - [Data Analysis](#data-analysis)
     - [Diagnostics and Flashing Tool (DFT)](#diagnostics-and-flashing-tool-dft)
     - [File Monitor](#file-monitor)
-    - [Frontend](#frontend)
+    - [Front End](#front-end)
     - [Jira (Existing)](#jira-existing)
     - [NAS (File Storage - Existing)](#nas-file-storage---existing)
     - [OpenTelemetry Collector](#opentelemetry-collector)
@@ -365,7 +365,7 @@ Processing a test includes writing the .pcap metadata to the database, triggerin
 - How is an interrupted test handled?
 - Does a test need to be archived (i.e. zipped and moved?)
 
-#### Frontend
+#### Front End
 
 \[External\]
 
@@ -374,7 +374,7 @@ GUI allowing for two disparate activities.
 1. View KPI data and export graphs
 1. View / administer(?) the system status
 
-Grafana seems like an obvious frontend choice.
+Grafana seems like an obvious front end choice.
 
 **- Outstanding Questions**
 

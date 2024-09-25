@@ -19,8 +19,10 @@ Enterprise_Boundary(System, "[Container] Proposal: Testing Automation Pipeline (
                     System_Boundary(PipelineSoftware, "Pipeline Software") {
                         Container(FileMonitor, "File Monitor", "python", "Process incoming .pcap and metadata files.")
                         Container(DataAnalysis, "Data Analysis", "python", "Perform target extraction and analysis.")
-                        Container(FrontEnd, "Front End", "Grafana or similar", "Web interface.")
-                        Container(DataCompilation, "Data Compilation", "python", "Create output based on analysis results\n e.g. .csv, images, html, reports.")
+                        'System_Boundary(FrontEnd1, "Front End") {
+                            Container(FrontEnd, "Data Viewer", "Grafana or similar", "Web platform for viewing KPI data, and exporting data for reports.")
+                        '    Container(SystemAdmin, "System Admin", "", "View current status of pipeline.")
+                        '}
                     }
                     Container(OpenTelemetry, "OpenTelemetry Collector", "Jaegar, Loki or similar", "Collect sensor test traces and forward to storage.")
                     Container_Boundary(DatabaseCollection, "Database") {
@@ -34,15 +36,11 @@ Enterprise_Boundary(System, "[Container] Proposal: Testing Automation Pipeline (
 }
 
 ' Layout rules
-Lay_R(DataAnalysis, FileMonitor)
-Lay_U(DatabaseCollection, PipelineSoftware)
-Lay_U(FileStorage, PipelineSoftware)
 
 ' Relationships
 Rel(Tester2, FrontEnd, "data  request")
 Rel(FrontEnd, Tester2, "data  summary,\n reports,\n images,\n notifications")
-Rel(FrontEnd, DataCompilation, "data  request")
-BiRel(DataCompilation, DatabaseCollection, "request / retrieve  analysis  results", "query")
+BiRel(FrontEnd, DatabaseCollection, "request / retrieve  analysis  results", "query")
 Rel(TestWorkStation, OpenTelemetry, "traces")
 Rel(TestWorkStation, FileStorage, "write  point  cloud  files  with  metadata", ".pcap")
 Rel(FileMonitor, FileStorage, "retrieve  pcap  metadata")
@@ -50,7 +48,7 @@ Rel(FileMonitor, Database, ".pcap metadata")
 BiRel(DataAnalysis, FileStorage, "uses  .pcap  files")
 Rel(DataAnalysis, DatabaseCollection, "target  extraction  results")
 Rel(OpenTelemetry, TraceDatabase, "traces")
-Rel(FrontEnd, Jama, "push test  evidence", "rest  api")
+Rel(Tester2, Jama, "test  evidence", "uploads")
 
 @enduml
 
