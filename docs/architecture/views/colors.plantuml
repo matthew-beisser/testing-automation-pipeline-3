@@ -1,22 +1,17 @@
 @startuml architecture_colors
 
 skinparam package<<boundary_solid_red>> {
-  BorderColor Red
+  BorderColor FireBrick 
   LineType solid
 }
 
 skinparam package<<boundary_solid_green>> {
-  BorderColor Green
+  BorderColor ForestGreen 
   LineType solid
 }
 
 skinparam package<<boundary_solid_blue>> {
-  BorderColor Blue
-  LineType solid
-}
-
-skinparam package<<boundary_solid_blue>> {
-  BorderColor Blue
+  BorderColor RoyalBlue
   LineType solid
 }
 
@@ -25,18 +20,5 @@ skinparam package<<boundary_solid_gray>> {
   LineType solid
 }
 
-
-skinparam package<<boundary_dashdot_dark_magenta>> {
-  BorderColor DarkMagenta
-  LineType dashdot
-}
-
-' legend
-'   <<boundary_solid_dark_slate_blue>> : Solid Dark Slate Blue Boundary
-'   <<boundary_dashed_dark_cyan>> : Dashed Dark Cyan Boundary
-'   <<boundary_dotted_dark_olive_green>> : Dotted Dark Olive Green Boundary
-'   <<boundary_bold_dark_golden_rod>> : Bold Dark Golden Rod Boundary
-'   <<boundary_dashdot_dark_magenta>> : Dashdot Dark Magenta Boundary
-' endlegend
 
 @enduml

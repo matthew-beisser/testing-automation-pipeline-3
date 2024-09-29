@@ -1,54 +1,68 @@
 @startuml container_diagram_proposal_data_processing
+!include colors.plantuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
+title Proposal: Testing Automation Pipeline (Data Collection)
+LAYOUT_WITH_LEGEND()
+
+AddRelTag("purple_rel", $textColor="MediumPurple", $lineColor="MediumPurple")
+AddRelTag("golden_rel", $textColor="#B8860B", $lineColor="#B8860B")
+AddRelTag("coral_rel", $textColor="Coral", $lineColor="Coral")
+
 ' Elements
-Enterprise_Boundary(System, "[Container] Proposal: Testing Automation Pipeline (Data Collection)") {
-    Enterprise_Boundary(CloudNetwork, "External Network") {    
-        Container_Ext(Jama, "Requirements Management", "Jama", "Store test evidence.")   
-        
-        Enterprise_Boundary(FacilitySystem, "Test Facility") {
-            Person(Tester2, "Test Engineer 2")
+Boundary(CloudNetwork, "External Network") <<boundary_solid_red>> {    
+    Container_Ext(Jama, "Requirements Management", "Jama", "Store test evidence.")   
+    
+    Boundary(FacilitySystem, "Test Facility") <<boundary_solid_blue>> {
+        System_Ext(TestWorkStation, "Test Workstation", "Record and push test data.")
+        Person(Tester2, "Test Engineer 2")
 
-            System_Boundary(TestPipelineSystem, "Pipeline Automation") {
-
-                System_Ext(TestWorkStation, "Test Workstation", "")
-
-                Container(FileStorage, "File Storage", "NAS", "Storage location for unprocessed .pcap files and metadata.")            
-                System_Boundary(Docker, "Docker (Linux)")  {
-                    System_Boundary(PipelineSoftware, "Pipeline Software") {
-                        Container(FileMonitor, "File Monitor", "python", "Process incoming .pcap and metadata files.")
-                        Container(DataAnalysis, "Data Analysis", "python", "Perform target extraction and analysis.")
-                        'System_Boundary(FrontEnd1, "Front End") {
-                            Container(FrontEnd, "Data Viewer", "Grafana or similar", "Web platform for viewing KPI data, and exporting data for reports.")
-                        '    Container(SystemAdmin, "System Admin", "", "View current status of pipeline.")
-                        '}
-                    }
-                    Container(OpenTelemetry, "OpenTelemetry Collector", "Jaegar, Loki or similar", "Collect sensor test traces and forward to storage.")
-                    Container_Boundary(DatabaseCollection, "Database") {
-                        ContainerDb(Database, "Database", "TBD", "Storage backend for extraction results and other TBD data.")
-                        ContainerDb(TraceDatabase, "Trace Database", "NoSQL, ElasticSearch, or other TBD", "Storage backend for tracing data.")
-                    }                    
+        Boundary(TestPipelineSystem, "Pipeline Automation") {
+            Container(FileStorage, "File Storage", "NAS", "Storage location for unprocessed .pcap files and metadata.")            
+            
+            Boundary(Docker, "Docker (Linux)")  {
+                
+                Boundary(PipelineSoftware, "Pipeline Software") {
+                    Container(FileMonitor, "File Monitor", "python", "Process incoming .pcap and metadata files.")
+                    Container(DataAnalysis, "Data Analysis", "python", "Perform target extraction and analysis.")
+                    'Boundary(FrontEnd1, "Front End") {
+                        Container(FrontEnd, "Data Viewer", "Grafana or similar", "Web platform for viewing KPI data, and exporting data for reports.")
+                    '    Container(SystemAdmin, "System Admin", "", "View current status of pipeline.")
+                    '}
                 }
+                Container(OpenTelemetry, "OpenTelemetry Collector & Writer", "Jaegar, Loki or similar", "Collect sensor test traces and forward to storage.")
+                Boundary(DatabaseCollection, "Database") {
+                    ContainerDb(Database, "Database", "TBD", "Storage backend for extraction results and other TBD data.")
+                    ContainerDb(TraceDatabase, "Trace Database", "NoSQL, ElasticSearch, or other TBD", "Storage backend for tracing data.")
+                }                    
             }
         }
     }
 }
 
 ' Layout rules
+Lay_R(OpenTelemetry, PipelineSoftware)
+Lay_R(FileMonitor, DataAnalysis)
+Lay_R(DataAnalysis, FrontEnd)
+'Lay_D(TestWorkStation, FileMonitor)
+'Lay_U(FileStorage, TraceDatabase)
+'Lay_D(TestWorkStation, FileStorage)
 
 ' Relationships
-Rel(Tester2, FrontEnd, "data  request")
-Rel(FrontEnd, Tester2, "data  summary,\n reports,\n images,\n notifications")
-BiRel(FrontEnd, DatabaseCollection, "request / retrieve  analysis  results", "query")
-Rel(TestWorkStation, OpenTelemetry, "traces")
-Rel(TestWorkStation, FileStorage, "write  point  cloud  files  with  metadata", ".pcap")
-Rel(FileMonitor, FileStorage, "retrieve  pcap  metadata")
-Rel(FileMonitor, Database, ".pcap metadata")
-BiRel(DataAnalysis, FileStorage, "uses  .pcap  files")
-Rel(DataAnalysis, DatabaseCollection, "target  extraction  results")
-Rel(OpenTelemetry, TraceDatabase, "traces")
-Rel(Tester2, Jama, "test  evidence", "uploads")
+Rel(Tester2, FrontEnd, "(A) data  request")
+Rel(FrontEnd, Tester2, "(B) data  summary,\n reports,\n images")
+BiRel(FrontEnd, DatabaseCollection, "(C) request / retrieve  analysis  results", "query")
+Rel(Tester2, Jama, "(D) test  evidence", "uploads")
+
+Rel_Neighbor(TestWorkStation, OpenTelemetry, "(1) send traces", $tags="coral_rel")
+Rel(TestWorkStation, FileStorage, "(1) write  point  cloud  files,\nmetadata,\ntest  end")
+Rel(OpenTelemetry, TraceDatabase, "(2) write  traces", $tags="coral_rel")
+BiRel(FileMonitor, FileStorage, "(3) retrieve  pcap  metadata", ".csv / .json", $tags="purple_rel")
+Rel(FileMonitor, Database, "(4) write\n.pcap  metadata", $tags="purple_rel")
+Rel(FileMonitor, DataAnalysis, "(5) triggers")
+BiRel(DataAnalysis, FileStorage, "(6) uses  .pcap  files", $tags="golden_rel")
+Rel(DataAnalysis, DatabaseCollection, "(7) target  extraction  results", $tags="golden_rel")
 
 @enduml
 
