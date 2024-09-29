@@ -1,20 +1,21 @@
 @startuml system_context_diagram
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
+title Testing Automation Pipeline
+
+LAYOUT_WITH_LEGEND()
 LAYOUT_TOP_DOWN()
 
 ' Elements
-Enterprise_Boundary(System, "[System Context] Testing Automation Pipeline") {
-        Person_Ext(Tester, "Test Engineer 1")
-        System(DataCollection, "Data Collection", "Capture sensor test data.")
-        System(DataProcessor, "Data Processing", "Perform sensor test analysis and generate analytics, reports, and dashboards.")
-        Person_Ext(DataAnalyst, "Test Engineer 2")
-}
+Person_Ext(Tester, "Test Engineer 1")
+System(DataCollection, "Data Collection", "Capture sensor test data.")
+System(DataProcessor, "Data Processing", "Perform sensor test analysis and generate analytics, reports, and dashboards.")
+Person_Ext(DataAnalyst, "Test Engineer 2")
 
 ' Relationships
-Rel_Neighbor(Tester, DataCollection, "initiates  test")
-Rel(DataCollection, DataProcessor, "triggers")
-Rel_Neighbor(DataProcessor, DataAnalyst, "test  results")
+Rel_Neighbor(Tester, DataCollection, "(1) initiates  test")
+Rel(DataCollection, DataProcessor, "(2) triggers")
+Rel_Neighbor(DataProcessor, DataAnalyst, "(3) test  results")
 
 @enduml
 

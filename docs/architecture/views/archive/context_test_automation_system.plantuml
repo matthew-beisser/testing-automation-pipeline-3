@@ -2,7 +2,7 @@
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
 ' Elements
-Enterprise_Boundary(CloudSystem, "External Network") {
+Enterprise_Boundary(CloudNetwork, "External Network") {
         System_Ext(Jira, "Issue Tracking", "Jira")
         System_Ext(Jama, "Requirements Management", "Jama")
         System(MasterDataStore, "Master Data Store", "Database containing test data from all workstations")

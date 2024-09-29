@@ -1,24 +1,28 @@
 @startuml container_diagram_existing_data_processing
+!include colors.plantuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-' Elements
-Enterprise_Boundary(System, "[Container] Existing Process: Testing Pipeline (Data Processing)") {
-    Enterprise_Boundary(CloudSystem, "External Network") {    
-        
-        Enterprise_Boundary(FacilitySystem, "Test Facility") {
-            Person(Tester2, "Test Engineer 2")
+title Existing Process: Testing Pipeline (Data Processing)
+LAYOUT_WITH_LEGEND()
 
-            Container_Ext(FileStorage, "File Storage", "nfs", "Storage location for unprocessed test data")
+' Elements
+Boundary(CloudNetwork, "External Network") <<boundary_solid_red>> {
+
+    Boundary(LuminarNetwork, "Luminar Network") <<boundary_solid_green>> {    
+        
+        Boundary(FacilitySystem, "Test Facility") <<boundary_solid_blue>> {
+            Person(Tester2, "Test Engineer 2")
             Container(DataAnalysis, "Data Analysis", "matlab", "Perform target extraction and analysis")
         }
+        Container_Ext(FileStorage, "File Storage", "nfs", "Storage location for unprocessed test data")
     }
 }
 
 ' Relationships
-Rel(Tester2, DataAnalysis, "initiates  data  analysis")
-BiRel(DataAnalysis, FileStorage, "uses  unprocessed  data")
-Rel(DataAnalysis, Tester2, "analysis  results:", ".csv")
+Rel(Tester2, DataAnalysis, "(1) initiates  data  analysis")
+BiRel(DataAnalysis, FileStorage, "(2) uses  unprocessed  data")
+Rel(DataAnalysis, Tester2, "(3) analysis  results:", ".csv")
 
 @enduml
 

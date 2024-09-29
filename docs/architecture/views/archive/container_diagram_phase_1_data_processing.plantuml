@@ -4,7 +4,7 @@
 
 ' Elements
 Enterprise_Boundary(System, "[Container] Phase 1: Testing Automation Pipeline") {
-    Enterprise_Boundary(CloudSystem, "External Network") {    
+    Enterprise_Boundary(CloudNetwork, "External Network") {    
         Container_Ext(Jama, "Requirements Management", "Jama")   
         
         Enterprise_Boundary(FacilitySystem, "Test Facility") {

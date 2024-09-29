@@ -67,7 +67,7 @@ While each sensor at a manufacturing facility undergoes a series of tests before
 This extra step, referred to as parameter testing (and monitoring), involves adjusting inputs to the sensor within certain boundaries.
 The goal is to observe the sensor's output and confirm it operates as anticipated under the varied conditions.
 
-The System Test Team is responsible for performing these additional tests on select batches of sensors.
+The System Test Team is responsible for performing these additional tests on select sensors.
 Note that there are different levels of parameter testing.
 These can range from comprehensive testing that covers system-level requirements, to more limited testing that focuses on a subset of these parameters, or even continuous monitoring of certain intrinsic parameters during operation.
 
@@ -90,11 +90,15 @@ the testing process, how test engineers collect data, and how that process can b
 A description of the problem at hand, why this project is necessary, what people need to know to assess this project, and how it fits into the technical strategy, product strategy, or the team's quarterly goals.
 -->
 
+Changes: Include FT instead of just FT2
+FT1 more limited of FT2
+FT3 continuous monitoring not necessarily part
+
 This document describes the current [FT2 process](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl) as well as the proposed automation for parts of this process.
 
 The complete automation of the FT2 process is outside the scope of this design, and a test engineer will still be required.
 
-It is understood that the FT2 automation process needs to be architectured in a manner that will allow the eventual support of additional test processes, i.e., FT1 and FT3 for Iris, as well as Iris+ (P01 - P03), and Halo.
+It is understood that the FT2 automation process needs to be architectured in a flexible manner allows the eventual support of additional test processes, i.e., FT1 and FT3 for Iris, as well as Iris+ (P01 - P03), and Halo.
 However, for the purposes of this design, those additional test processes are considered out of scope.
 
 The current FT2 process is a primarly manual process with a few automation steps built in for convenience.
@@ -243,11 +247,21 @@ POC: Jeff Hawkins
 
 **- Outstanding Questions**
 
+- Changes to valkyrie will most likely be us.
+
+  - Need to get alignment on system processing team and tickets with Jira
+
 - How is Valkyrie going to be deployed as part of the solution?
+
   - What is the current update process?
+  - 9/27 - Jeff would be interested
+
 - Can Valkyrie be integrated with the Jira REST API so ticket numbers can be sourced and test completion results written?
+
   - Seems like the answer is [yes](https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z0000019VpgSAE&l=en-US), thought not sure on the level of effort.
+
 - PCAP recording is currently done with Wireshark, is that going to be replaced with a homegrown app?
+
   - Is this in scope, and who will do this work?
   - Could we switch this to another cli tool like PyPCAPKit (Python package)?
 
