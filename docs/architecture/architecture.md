@@ -8,7 +8,8 @@
 - [The Format](#the-format)
 - [Static Architecture](#static-architecture)
   - [System Overview](#system-overview)
-  - [Sequence Diagram](#sequence-diagram)
+    - [Data Collection](#data-collection)
+    - [Data Transfer](#data-transfer)
 
 <!-- mdformat-toc end -->
 
@@ -39,23 +40,28 @@ The proposed data processing for the FT2 automation testing is shown in the diag
 ![container_diagram_proposal_data_processing](architecture/views/container_diagram_proposal_data_processing.svg)
 -->
 
-### Sequence Diagram
+#### Data Collection
 
 ```mermaid
+%%{
+    init: {'theme': 'neutral' }
+}%%
+
 sequenceDiagram
     autonumber
 
     Participant Jama
     Participant WS as Wireshark CLI
-    Participant DFT as DFT (DOIP) CLI
+    Participant DFT as DFT (doip) CLI
     Participant Lidar
     Participant Valk as Valkyrie
-    Participant DB as Database
-    Participant FS as File System
-    Participant PConvert as pcap Converter
+    Participant DB as Local Database
+    Participant FS as Local File System
+    Participant PConvert as Pcap Converter
     Participant TE as Target Extraction
 
-    Valk->>Jama: Work Item ID (Rest API)
+    Valk->>Valk: Enter work item id
+    Valk->>Jama: Work item ID (Rest API)
     Jama->>Valk: TBD Data (.json)
     Valk->>Valk: Select Test (GUI)
     
@@ -63,25 +69,90 @@ sequenceDiagram
 
     Valk->>Lidar: Start Test (???)
 
-    par Record DOIP data
-        loop Until test completes
-            DFT->>Lidar: DOIP Read Parameter
-            Lidar->>DFT: DOIP Response
-            DFT->>DB: Event Data (Key/Value (binary))
+    par Record doip data
+        loop 
+            DFT->>Lidar: Read parameter (doip)
+            Lidar->>DFT: Parameter data (doip)
+            DFT->>DB: Parameter Data (sql - Key/Binary data)
         end
-    and Record Pointcloud
-        loop Until test completes
-            Valk->>WS: Start capture
+        Valk->>DFT: End task
+        DFT-->>Valk: Done
+    and Record point cloud
+        loop 
+            Valk->>WS: Start network capture
             Valk->>FS: Write pcap metadata file (.json)
             
             loop
-                Lidar->>WS: Pointcloud data (udp packet)
-                WS->>FS: write pcap file (.pcap)
+                Lidar->>WS: Point cloud data (udp)
+                WS->>FS: Write pcap file (.pcap)
             end
 
-            WS->>Valk: pcap capture done
-            Valk->>PConvert: Trigger pcap to csv conversion (csv name)
+            Valk->>WS: End task - pcap capture
+            WS-->>Valk: Done
+            Valk->>PConvert: Trigger pcap conversion (pcap name)
+            PConvert->>FS: Retrieve pcap
+            FS-->>PConvert: 
+            PConvert->>PConvert: Convert pcap
+            PConvert-->>Valk: Done
+            Valk->>TE: Trigger extraction
             TE->>DB: Results (TBD)
+            TE-->>Valk: Done
+        end
+    end
+```
+
+#### Data Transfer
+
+```mermaid
+%%{
+    init: {'theme': 'neutral' }
+}%%
+
+sequenceDiagram
+    autonumber
+
+    Participant DS as Incoming Data
+    Participant DB as Database
+    Participant FS as File System
+    Participant Daemon as Data Translate Daemon
+    Participant Prod as Message Producer
+    Participant Cons as Message Consumer
+    Participant CloudDB as Cloud Database
+    Participant CloudFS as Cloud File System
+
+    loop
+        par Record parameter data
+            DS->>DB: doip data (sql - Key/Binary data)
+        and Record pcap data
+            DS->>FS: pcap metadata file (.json)
+            DS->>FS: pcap file (.pcap)
+        end
+    end
+
+    loop
+        par Transfer pcap file
+            Daemon->>FS: Retrieve .pcap file
+            FS-->>Daemon: 
+            Daemon->>CloudFS: Copy .pcap file (magic transfer protocol)
+            CloudFS-->>Daemon: 
+
+            Daemon->>FS: Retrieve .pcap metadata file
+            FS-->>Daemon: 
+            Daemon->>Prod: .pcap metadata (.json)
+            Prod->>Cons: .pcap metadata message (.json)
+            Cons->>CloudDB: .pcap metadata (sql)
+            CloudDB-->>Cons: 
+            Cons-->>Prod: 
+            Prod-->>Daemon: 
+        and Transfer doip parameter data`
+            Daemon->>DB: Request doip data (sql)
+            DB-->>Daemon: 
+            Daemon->>Prod: doip data (.json)
+            Prod->>Cons: doip data message (.json)
+            Cons->>CloudDB: doip data (sql)
+            CloudDB-->>Cons: 
+            Cons-->>Prod: 
+            Prod-->>Daemon:             
         end
     end
 ```
