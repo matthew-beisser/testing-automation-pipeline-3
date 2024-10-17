@@ -103,6 +103,8 @@ sequenceDiagram
 
 #### Data Transfer
 
+**Daemon with message queue**
+
 ```mermaid
 %%{
     init: {'theme': 'neutral' }
@@ -153,6 +155,55 @@ sequenceDiagram
             CloudDB-->>Cons: 
             Cons-->>Prod: 
             Prod-->>Daemon:             
+        end
+    end
+```
+
+**Daemon with direct remote db access**
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    Participant DS as Incoming Data
+    Participant DB as Database
+    Participant FS as File System
+    Participant Daemon as Data Translate Daemon
+
+    %%Participant Prod as Message Producer
+    %%Participant Cons as Message Consumer
+
+    Participant CloudDB as Cloud Database
+    Participant CloudFS as Cloud File System
+
+    loop
+        par Record parameter data
+            DS->>DB: doip data (sql - Key/Binary data)
+        and Record pcap data
+            DS->>FS: pcap metadata file (.json)
+            DS->>FS: pcap file (.pcap)
+        end
+    end
+
+    loop
+        par Transfer pcap file
+            Daemon->>FS: Retrieve .pcap file
+            FS-->>Daemon: 
+            Daemon->>CloudFS: Copy .pcap file (magic transfer protocol)
+            CloudFS-->>Daemon: 
+            Daemon-->>FS: Write copy complete file
+
+            Daemon->>FS: Retrieve .pcap metadata file
+            FS-->>Daemon: 
+            Daemon->>CloudDB: .pcap metadata (sql)
+            CloudDB-->>Daemon: 
+            Daemon-->>FS: Write metadata processed file
+
+        and Transfer doip parameter data
+            Daemon->>DB: Request doip data (sql)
+            DB-->>Daemon: 
+            Daemon->>CloudDB: doip data (sql)
+            CloudDB-->>DB: Mark processed (sql)
         end
     end
 ```
