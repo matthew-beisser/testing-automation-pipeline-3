@@ -52,7 +52,6 @@ sequenceDiagram
 
     Participant Jama
     Participant WS as Wireshark CLI
-    Participant DFT as DFT (doip) CLI
     Participant Lidar
     Participant Valk as Valkyrie
     Participant DB as Local Database
@@ -63,23 +62,19 @@ sequenceDiagram
     Valk->>Valk: Enter work item id
     Valk->>Jama: Work item ID (Rest API)
     Jama->>Valk: TBD Data (.json)
-    Valk->>Valk: Select Test (GUI)
-    
-    Valk->>DFT: Launch  
+    Valk->>Valk: Select test (GUI)
 
-    Valk->>Lidar: Start Test (???)
+    Valk->>Lidar: Start test (doip)
 
     par Record doip data
         loop 
-            DFT->>Lidar: Read parameter (doip)
-            Lidar->>DFT: Parameter data (doip)
-            DFT->>DB: Parameter Data (sql - Key/Binary data)
+            Valk->>Lidar: Read parameter (doip/dftlib)
+            Lidar->>Valk: Parameter data (doip)
+            Valk->>DB: Parameter data (sql - key/binary data)
         end
-        Valk->>DFT: End task
-        DFT-->>Valk: Done
     and Record point cloud
         loop 
-            Valk->>WS: Start network capture
+            Valk->>WS: Start network capture (timer)
             Valk->>FS: Write pcap metadata file (.json)
             
             loop
@@ -87,16 +82,19 @@ sequenceDiagram
                 WS->>FS: Write pcap file (.pcap)
             end
 
-            Valk->>WS: End task - pcap capture
-            WS-->>Valk: Done
+            WS-->>Valk: Done (timeout)
             Valk->>PConvert: Trigger pcap conversion (pcap name)
             PConvert->>FS: Retrieve pcap
             FS-->>PConvert: 
             PConvert->>PConvert: Convert pcap
+            PConvert->>FS: Convered pcap (file)
             PConvert-->>Valk: Done
             Valk->>TE: Trigger extraction
-            TE->>DB: Results (TBD)
+            TE->>FS: Write extraction results (.txt)
             TE-->>Valk: Done
+            Valk->>FS: Retrieve extraction results (.txt)
+            FS-->>Valk: 
+            Valk->>DB: Extraction results (sql)
         end
     end
 ```
@@ -124,7 +122,7 @@ sequenceDiagram
 
     loop
         par Record parameter data
-            DS->>DB: doip data (sql - Key/Binary data)
+            DS->>DB: doip data (sql - key/binary data)
         and Record pcap data
             DS->>FS: pcap metadata file (.json)
             DS->>FS: pcap file (.pcap)
@@ -146,7 +144,7 @@ sequenceDiagram
             CloudDB-->>Cons: 
             Cons-->>Prod: 
             Prod-->>Daemon: 
-        and Transfer doip parameter data`
+        and Transfer doip parameter data
             Daemon->>DB: Request doip data (sql)
             DB-->>Daemon: 
             Daemon->>Prod: doip data (.json)
@@ -174,15 +172,12 @@ sequenceDiagram
     Participant FS as File System
     Participant Daemon as Data Translate Daemon
 
-    %%Participant Prod as Message Producer
-    %%Participant Cons as Message Consumer
-
     Participant CloudDB as Cloud Database
     Participant CloudFS as Cloud File System
 
     loop
         par Record parameter data
-            DS->>DB: doip data (sql - Key/Binary data)
+            DS->>DB: doip data (sql - key/binary data)
         and Record pcap data
             DS->>FS: pcap metadata file (.json)
             DS->>FS: pcap file (.pcap)
