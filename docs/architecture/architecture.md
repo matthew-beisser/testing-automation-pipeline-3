@@ -50,7 +50,7 @@ The proposed data processing for the FT2 automation testing is shown in the diag
 sequenceDiagram
     autonumber
 
-    Participant Jama
+    Participant Jira
     Participant WS as Wireshark CLI
     Participant Lidar
     Participant Valk as Valkyrie
@@ -60,8 +60,8 @@ sequenceDiagram
     Participant TE as Target Extraction
 
     Valk->>Valk: Enter work item id
-    Valk->>Jama: Work item ID (Rest API)
-    Jama->>Valk: TBD Data (.json)
+    Valk->>Jira: Work item ID (Rest API)
+    Jira->>Valk: TBD Data (.json)
     Valk->>Valk: Select test (GUI)
 
     Valk->>Lidar: Start test (doip)
