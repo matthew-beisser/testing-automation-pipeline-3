@@ -162,6 +162,10 @@ sequenceDiagram
 **Daemon with direct remote db access**
 
 ```mermaid
+%%{
+    init: {'theme': 'neutral' }
+}%%
+
 sequenceDiagram
     autonumber
 
@@ -203,7 +207,14 @@ sequenceDiagram
             Daemon->>DB: Request doip data (sql)
             DB-->>Daemon: 
             Daemon->>CloudDB: doip data (sql)
-            CloudDB-->>DB: Mark processed (sql)
+            CloudDB-->>Daemon: 
+            Daemon-->>DB: Mark processed (sql)
+        and Transfer target extraction data
+            Daemon->>DB: Request target extraction data (sql)
+            DB-->>Daemon: 
+            Daemon->>CloudDB: target extraction data (sql)
+            CloudDB-->>Daemon: 
+            Daemon-->>DB: Mark processed (sql)
         end
     end
 ```
