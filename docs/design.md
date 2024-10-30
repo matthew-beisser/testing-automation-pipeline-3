@@ -13,17 +13,11 @@ Last Updated: 2024-mm-dd
 - [Goals](#goals)
 - [Non-Goals](#non-goals)
 - [Milestones](#milestones)
-- [Existing Solution](#existing-solution)
-  - [Existing Entities](#existing-entities)
-    - [Data Analysis (Target Extraction - Matlab)](#data-analysis-target-extraction---matlab)
-    - [Jira](#jira)
-    - [Lidar](#lidar)
-    - [NFS File Storage](#nfs-file-storage)
-    - [Valkyrie Workstation](#valkyrie-workstation)
-      - [PCAP Naming Convention](#pcap-naming-convention)
-  - [Existing Data Collection](#existing-data-collection)
-  - [Existing Data Processing](#existing-data-processing)
 - [Proposed Solution](#proposed-solution)
+  - [System Overview](#system-overview)
+  - [Proposed Data Collection](#proposed-data-collection)
+    - [Data Transfer](#data-transfer)
+  - [Proposed Data Processing](#proposed-data-processing)
   - [Proposed Entities](#proposed-entities)
     - [Database](#database)
     - [Data Compilation (TBD)](#data-compilation-tbd)
@@ -36,9 +30,16 @@ Last Updated: 2024-mm-dd
     - [OpenTelemetry Collector](#opentelemetry-collector)
     - [Pcap Recorder (Replacement)](#pcap-recorder-replacement)
     - [Valkyrie Workstation (Existing)](#valkyrie-workstation-existing)
-  - [System Overview](#system-overview)
-  - [Proposed Data Collection](#proposed-data-collection)
-  - [Proposed Data Processing](#proposed-data-processing)
+- [Existing Solution](#existing-solution)
+  - [Existing Data Collection](#existing-data-collection)
+  - [Existing Data Processing](#existing-data-processing)
+  - [Existing Entities](#existing-entities)
+    - [Data Analysis (Target Extraction - Matlab)](#data-analysis-target-extraction---matlab)
+    - [Jira](#jira)
+    - [Lidar](#lidar)
+    - [NFS File Storage](#nfs-file-storage)
+    - [Valkyrie Workstation](#valkyrie-workstation)
+      - [PCAP Naming Convention](#pcap-naming-convention)
 - [Alternative Solutions](#alternative-solutions)
 - [Cross-Team Impact](#cross-team-impact)
 - [Open Questions](#open-questions)
@@ -82,7 +83,7 @@ The 3 different type of parameter test defintions for Iris and Iris+ is shown in
 While the exact specifications of these tests are outside the scope of this document (though details can be found [here](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl))
 the testing process, how test engineers collect data, and how that process can be automated is the focus of this design.
 
-**It is important to note that this automated process is required as part of the transition of manufacturing to TPK(?) in 2025/2026.**
+**It is important to note that this automated process is required as part of the transition of manufacturing to TPK in 2025/2026.**
 
 ## Context
 
@@ -90,36 +91,32 @@ the testing process, how test engineers collect data, and how that process can b
 A description of the problem at hand, why this project is necessary, what people need to know to assess this project, and how it fits into the technical strategy, product strategy, or the team's quarterly goals.
 -->
 
-Changes: Include FT instead of just FT2
-FT1 more limited of FT2
-FT3 continuous monitoring not necessarily part
+This document describes the current [FT process](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl) as performed in Orlando, as well as the proposed automation required for transitioning the testing to TPK.
 
-This document describes the current [FT2 process](https://luminartech.sharepoint.com/:p:/s/SharedFiles/EQHOJNqx7GxIuGgJ0OetWdwBdkQNoR8Q46KQb3aKOsfmQg?e=C4qzhl) as well as the proposed automation for parts of this process.
-
-The complete automation of the FT2 process is outside the scope of this design, and a test engineer will still be required.
-
-It is understood that the FT2 automation process needs to be architectured in a flexible manner allows the eventual support of additional test processes, i.e., FT1 and FT3 for Iris, as well as Iris+ (P01 - P03), and Halo.
-However, for the purposes of this design, those additional test processes are considered out of scope.
-
-The current FT2 process is a primarly manual process with a few automation steps built in for convenience.
+The current FT process is a mostly manual process with a few automation steps built in for convenience.
 It primarily consists of a series of steps requiring users to input file names, copy files to various locations, trigger data analysis for specific test runs, and extract and manipulate data from .csv files to produce reports.
 These steps are prone to user error which causes delays.
-Perhaps more importantly though, the ability to view the test data over time against KPIs as well as interogating the test data over time is lacking.
+Perhaps more importantly though, the ability to view the test data over time against KPIs is lacking.
 This makes the trend analysis of sensor parameter testing not possible without investing an extradorinary amount of time.
 
 ## Goals
 
-The proposed FT2 solution will address:
+The proposed FT solution will:
 
-- The manual processing of test output data
-- Retrieving sensor diagnostics over DOIP
-- Storing sensor test output in a commonly accessible and searchable way
-- Automatic triggering of data analysis (target extraction)
-- Porting the existing Matlab target extraction code to Python
-- Storing target extraction results in a commonly accessible and searchable way
-- Reducing the time required for analysis and report creation
-- Providing dashboards for viewing data against KPIs
-- The initial deployment and upgrade mechanisms for the software
+- Be architectured in a flexible manner allows the eventual support of additional test processes, i.e., Iris+ (P01 - P03), and Halo.
+- Minimize data entry for the test engineer at the workstation
+- Minimize the need for the manual processing of test output data
+- Replace telnet from the test process with DOIP and SOME/IP
+- Store sensor test output in a commonly accessible and searchable format
+- Port the existing Matlab target extraction code to Python
+- Automatically trigger target extraction and generate results and KPI data
+- Store target extraction results in a commonly accessible and searchable format
+- Reduce the time required for analysis and report creation
+- Provide cloud based dashboards for viewing data against KPIs
+- Report errors that occur during the testing process
+- Generate test evidence that can be saved in Jama for auditing purposes
+- Provide a process to install the software solution on local workstations and cloud server(s)
+- Data security and export considerations with regards to foreign entities
 
 <!--
 The Goals section should:
@@ -134,12 +131,12 @@ The Goals section should:
 Non-Goals are equally important to describe which problems you won't be fixing so everyone is on the same page.
 -->
 
-The proposed FT2 solution will intentionally **NOT** address:
+The proposed solution will intentionally **NOT** address:
 
-- Fully automating FT2
-- Processing telnet data in the existing workflow
-- Replacing Valkyrie
-- Upgrading Valkyrie
+- Fully automating FT testing. A test engineer will still be required.
+- Changing the existing FT process for use in Orlando before deployment to TPK.
+- Integrating the FT test data with the CMX manufacturing test data.
+- Adding any tests outside the current FT testing.
 
 ## Milestones
 
@@ -156,139 +153,237 @@ End Date: Add feature X, Y, Z to new system: July 14th, 2018
 Add an [Update] subsection here if the ETA of some of these milestone changes, so the stakeholders can easily see the most up-to-date estimates.
 -->
 
-- File outputs from tests
-- FTD open telemetry tracing complete for VCC
-- Docker Linux instance stood up
-- Distributed Tracing Solution (Jaeggar, Grafana Loki, openobserve.ai, etc) tested and choosen
-  - Corresponding database selected
-- Matlab target extraction running with single pcap
-  - Code ported to Python
+Data Collection
 
-## Existing Solution
+- Database
+  - Database selected and deployed
+  - Local database schemas designed (basic)
+  - Local database schema designed (full)
+  - Deployment strategy
+- Web Server
+  - Software selected, installed, and configured
+  - Rest API defined
+    - Data collection
+    - Data transfer
+  - Web requests CRUD database
+  - Simulate input data
+  - Deployment strategy
+- Valkyrie
+  - Read sensor via doip
+  - Use SOME/IP instead of telnet
+  - Telnet replaced with DFTlib & SOME/IP
+  - Store doip data in database via webserver
+  - Triggers PCAP conversion
+  - Triggers target extraction
+  - Store target extraction data in database via webserver
+- Target extraction
+  - Scenes ported from Matlab to Python
+  - KPIs written to test files
+  - Deployment strategy
 
-<!-- 
-In addition to describing the current implementation, you should also walk through a high level example flow to illustrate how users interact with this system and/or how data flow through it.
+Data Transfer
 
-A user story is a great way to frame this. Keep in mind that your system might have different types of users with different use cases.
--->
+- Cloud Environment
+  - IT infrastructure approved
+  - Cloud provider selected
+  - Cloud database selected and configured
+  - Cloud storage selected and configured
+- Data Transfer Daemon
+  - Transfer PCAP files
+    - Store PCAP metadata in cloud database via webserver
+    - Archive local PCAP & metadata
+  - Transfer Doip parameter data
+  - Transfer target extraction data
+  - Deployment strategy
 
-### Existing Entities
+Data KPI Visualization
 
-#### Data Analysis (Target Extraction - Matlab)
-
-\[External System\]
-
-The data analysis is performed by a Matlab application which performs target extraction on the test pcaps.
-
-Repository: [IrisDataTools](https://github.com/luminartech/IrisDataTools)
-
-POC: Daniel Ferrone
-
-**- Outstanding Questions**
-
-- How can I run target extraction manually on a single pcap file?
-- What are the outputs, how many are there, and how are they used in reporting? (Mehdi Chaouqi)
-
-#### Jira
-
-\[External System\]
-
-A Jira board is used along with epics, stories, and tasks to track the current testing tasks.
-
-An epic is used to track a batch of sensor to test, e.g. [Iris Slim V1 - PV (70-0025007/008)](https://luminartech.atlassian.net/browse/TV-5628)
-
-Stories are used to group tasks in an adhoc manner, e.g. [PV: Leg1 ReTest_PV1-002753](https://luminartech.atlassian.net/browse/TV-8426)
-
-Tasks (not currently linked to epics) are used to track a certain type of test result for multiple sensors.
-A single sensor's test completion is tracked as a comment, e.g. [PV Retest Leg 1 FT1 Data Collection - Post FW Update](https://luminartech.atlassian.net/browse/TV-8763)
-
-#### Lidar
-
-\[External System\]
-
-The Iris sensor under test. Iris+ and Halo support are [out of scope](#context) for the initial FT2 design.
-
-#### NFS File Storage
-
-\[External System\]
-
-A common network file share (NFS) used to store output test data before it is processed.
-It's a NAS that is accessible from all workstations.
-
-The current base location for FT2 data is: `\\mco1-fs03\Workgroups\validation-data\`
-
-Example output location: `Iris_Sensor_Head_70-0025-010\P32406697T00003188VAE7E3\`
-
-```shell
-Iris_Sensor_Head_XX-YYYY-ZZZ        - (XX-YYYY-ZZZ is the numeric sensor hardware pedigree) 
-└── <Sensor Serial Number> 
-    ├── FT2-Pre
-    │   ├── Adams_YYYYMMDD_HHMM     - (near field station)
-    │   ├── Eve_YYYYMMDD_HHMM       - (near field station)
-    │   ├── Bishop_YYYYMMDD_HHMM    - (long range test facility)
-    │   └── Skippy_YYYYMMDD_HHMM    - (long range test facility)
-    └── FT2-Post
-        └── <Same layout as FT2-Post>
-```
-
-#### Valkyrie Workstation
-
-\[External System\]
-
-A Windows workstation running the Valkyrie (Labview) software.
-Valykrie is a GUI that allows operators to select and run various tests for a sensor.
-The output of these tests, currently telnet .csv and point cloud .pcap captures, are stored on the NFS.
-
-Valkyrie will be kept as part of the new process.
-
-Repository: [SystemTestTools](https://github.com/luminartech/SystemTestTools)
-
-POC: Jeff Hawkins
-
-**- Outstanding Questions**
-
-- Changes to valkyrie will most likely be us.
-
-  - Need to get alignment on system processing team and tickets with Jira
-
-- How is Valkyrie going to be deployed as part of the solution?
-
-  - What is the current update process?
-  - 9/27 - Jeff would be interested
-
-- Can Valkyrie be integrated with the Jira REST API so ticket numbers can be sourced and test completion results written?
-
-  - Seems like the answer is [yes](https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z0000019VpgSAE&l=en-US), thought not sure on the level of effort.
-
-- PCAP recording is currently done with Wireshark, is that going to be replaced with a homegrown app?
-
-  - Is this in scope, and who will do this work?
-  - Could we switch this to another cli tool like PyPCAPKit (Python package)?
-
-##### PCAP Naming Convention
-
-PCAP files are automatically captured by [Valkyrie](#valkyrie-workstation) at various points in the testing.
-The output file name is based upon the test parameters. E.g. `282_200m_28fov_n4offs_n60_LO123_1_00002_20220428101251.pcap`
-
-**- Outstanding Questions**
-
-- The file names contain metadata that presumably is relevant to the data analysis phase.
-  - Parsing these strings seems error prone and complicated.
-    Can we write a pcap file with some basic identifiers in the name, but then store the metadata in a corresponding .csv or .json file?
-
-### Existing Data Collection
-
-The existing data collection process for the FT2 testing is shown in the diagram below.
-
-![container_diagram_existing_data_collection](architecture/views/container_diagram_existing_data_collection.svg)
-
-### Existing Data Processing
-
-The existing data processing process for the FT2 testing is shown in the diagram below.
-
-![container_diagram_existing_data_processing](architecture/views/container_diagram_existing_data_processing.svg)
+- Web frontend solution evaluated
+- Web frontend solution selected and deployed
 
 ## Proposed Solution
+
+### System Overview
+
+The proposed system level diagram the FT automation testing is shown in the diagram below.
+
+![system_context_diagram](architecture/views/system_context_diagram.svg)
+
+### Proposed Data Collection
+
+The proposed data collection process for the FT automation testing is shown in the sequence diagram below.
+
+<!-- ![container_diagram_proposal_data_collection](architecture/views/container_diagram_proposal_data_collection.svg) -->
+
+```mermaid
+%%{
+    init: {'theme': 'neutral' }
+}%%
+
+sequenceDiagram
+    autonumber
+
+    Participant Jira
+    Participant WS as Wireshark CLI
+    Participant Lidar
+    Participant Valk as Valkyrie
+    Participant WWW as Web Server
+    Participant DB as Local Database
+    Participant FS as Local File System
+    Participant PConvert as Pcap Converter
+    Participant TE as Target Extraction
+
+    Valk->>Valk: Enter work item id
+    Valk->>Jira: Work item ID (Rest API)
+    Jira->>Valk: TBD Data (.json)
+    Valk->>Valk: Select test (GUI)
+
+    Valk->>Lidar: Start test (doip)
+
+    par Record doip data
+        loop 
+            Valk->>Lidar: Read parameter (doip/dftlib)
+            Lidar->>Valk: Parameter data (doip)
+            Valk->>WWW: Parameter data (http post/put)
+            WWW->>DB: Write parameter data
+            DB-->>WWW: 
+            WWW-->>Valk: 
+        end
+    and Record point cloud
+        loop 
+            Valk->>WS: Start network capture (timer)
+            Valk->>FS: Write pcap metadata file (.json)
+            
+            loop
+                Lidar->>WS: Point cloud data (udp)
+                WS->>FS: Write pcap file (.pcap)
+            end
+
+            WS-->>Valk: Done (timeout)
+            Valk->>PConvert: Trigger pcap conversion (pcap name)
+            PConvert->>FS: Retrieve pcap
+            FS-->>PConvert: 
+            PConvert->>PConvert: Convert pcap
+            PConvert->>FS: Converted pcap (file)
+            PConvert-->>Valk: Done
+            Valk->>TE: Trigger extraction
+            TE->>FS: Write extraction results (.txt)
+            TE-->>Valk: Done
+            Valk->>FS: Retrieve extraction results (.txt)
+            FS-->>Valk: 
+            Valk->>DB: Extraction results (sql)
+        end
+    end
+```
+
+#### Data Transfer
+
+**Daemon with direct remote db access**
+
+```mermaid
+%%{
+    init: {'theme': 'neutral' }
+}%%
+
+sequenceDiagram
+    autonumber
+
+    Participant DB as Local Database
+    Participant FS as Local File System
+    Participant Daemon as Data Translate Daemon
+
+    Participant CloudDB as Cloud Database
+    Participant CloudFS as Cloud File System
+
+    loop
+        par Transfer pcap file
+            Daemon->>FS: Initiate .pcap file copy
+            FS->>CloudFS: Copy .pcap file (rsync, sftp)
+            CloudFS-->>Daemon: 
+            Daemon->>FS: Retrieve .pcap metadata file
+            FS-->>Daemon: 
+            Daemon->>CloudDB: Write .pcap metadata (sql)
+            CloudDB-->>Daemon: 
+            Daemon->>FS: Archive .pcap & metadata file
+            FS-->>Daemon: 
+
+        and Transfer doip parameter data
+            Daemon->>DB: Request doip data (sql)
+            DB-->>Daemon: 
+            Daemon->>CloudDB: doip data (sql)
+            CloudDB-->>Daemon: 
+            Daemon-->>DB: Mark processed (sql)
+        and Transfer target extraction data
+            Daemon->>DB: Request target extraction data (sql)
+            DB-->>Daemon: 
+            Daemon->>CloudDB: target extraction data (sql)
+            CloudDB-->>Daemon: 
+            Daemon-->>DB: Mark processed (sql)
+        end
+    end
+```
+
+**Daemon with message queue (unlikely)**
+
+```mermaid
+%%{
+    init: {'theme': 'neutral' }
+}%%
+
+sequenceDiagram
+    autonumber
+
+    Participant DS as Incoming Data
+    Participant DB as Database
+    Participant FS as File System
+    Participant Daemon as Data Translate Daemon
+    Participant Prod as Message Producer
+    Participant Cons as Message Consumer
+    Participant CloudDB as Cloud Database
+    Participant CloudFS as Cloud File System
+
+    loop
+        par Record parameter data
+            DS->>DB: doip data (sql - key/binary data)
+        and Record pcap data
+            DS->>FS: pcap metadata file (.json)
+            DS->>FS: pcap file (.pcap)
+        end
+    end
+
+    loop
+        par Transfer pcap file
+            Daemon->>FS: Retrieve .pcap file
+            FS-->>Daemon: 
+            Daemon->>CloudFS: Copy .pcap file (magic transfer protocol)
+            CloudFS-->>Daemon: 
+
+            Daemon->>FS: Retrieve .pcap metadata file
+            FS-->>Daemon: 
+            Daemon->>Prod: .pcap metadata (.json)
+            Prod->>Cons: .pcap metadata message (.json)
+            Cons->>CloudDB: .pcap metadata (sql)
+            CloudDB-->>Cons: 
+            Cons-->>Prod: 
+            Prod-->>Daemon: 
+        and Transfer doip parameter data
+            Daemon->>DB: Request doip data (sql)
+            DB-->>Daemon: 
+            Daemon->>Prod: doip data (.json)
+            Prod->>Cons: doip data message (.json)
+            Cons->>CloudDB: doip data (sql)
+            CloudDB-->>Cons: 
+            Cons-->>Prod: 
+            Prod-->>Daemon:             
+        end
+    end
+```
+
+### Proposed Data Processing
+
+The proposed data processing for the FT2 automation testing is shown in the diagram below.
+
+<!-- ![container_diagram_proposal_data_processing](architecture/views/container_diagram_proposal_data_processing.svg) -->
 
 ### Proposed Entities
 
@@ -468,29 +563,129 @@ Instead the filename will be:
 
 <!-- End entities ----------------------------------------------------------------------------------------------------->
 
-### System Overview
+## Existing Solution
 
-The proposed system level diagram the FT2 automation testing is shown in the diagram below.
+### Existing Data Collection
 
-![system_context_diagram](architecture/views/system_context_diagram.svg)
+The existing data collection process for the FT2 testing is shown in the diagram below.
 
-### Proposed Data Collection
+![container_diagram_existing_data_collection](architecture/views/container_diagram_existing_data_collection.svg)
 
-The proposed data collection process for the FT2 automation testing is shown in the diagram below.
+### Existing Data Processing
 
-![container_diagram_proposal_data_collection](architecture/views/container_diagram_proposal_data_collection.svg)
+The existing data processing process for the FT2 testing is shown in the diagram below.
 
-### Proposed Data Processing
+![container_diagram_existing_data_processing](architecture/views/container_diagram_existing_data_processing.svg)
 
-The proposed data processing for the FT2 automation testing is shown in the diagram below.
+<!-- 
+In addition to describing the current implementation, you should also walk through a high level example flow to illustrate how users interact with this system and/or how data flow through it.
 
-![container_diagram_proposal_data_processing](architecture/views/container_diagram_proposal_data_processing.svg)
-
-<!--
-The proposed data processing process for the FT2 testing is shown in the diagram below.
-
-![system_context_diagram](architecture/views/container_diagram_existing_data_processing.svg)
+A user story is a great way to frame this. Keep in mind that your system might have different types of users with different use cases.
 -->
+
+### Existing Entities
+
+#### Data Analysis (Target Extraction - Matlab)
+
+\[External System\]
+
+The data analysis is performed by a Matlab application which performs target extraction on the test pcaps.
+
+Repository: [IrisDataTools](https://github.com/luminartech/IrisDataTools)
+
+POC: Daniel Ferrone
+
+**- Outstanding Questions**
+
+- How can I run target extraction manually on a single pcap file?
+- What are the outputs, how many are there, and how are they used in reporting? (Mehdi Chaouqi)
+
+#### Jira
+
+\[External System\]
+
+A Jira board is used along with epics, stories, and tasks to track the current testing tasks.
+
+An epic is used to track a batch of sensor to test, e.g. [Iris Slim V1 - PV (70-0025007/008)](https://luminartech.atlassian.net/browse/TV-5628)
+
+Stories are used to group tasks in an adhoc manner, e.g. [PV: Leg1 ReTest_PV1-002753](https://luminartech.atlassian.net/browse/TV-8426)
+
+Tasks (not currently linked to epics) are used to track a certain type of test result for multiple sensors.
+A single sensor's test completion is tracked as a comment, e.g. [PV Retest Leg 1 FT1 Data Collection - Post FW Update](https://luminartech.atlassian.net/browse/TV-8763)
+
+#### Lidar
+
+\[External System\]
+
+The Iris sensor under test. Iris+ and Halo support are [out of scope](#context) for the initial FT2 design.
+
+#### NFS File Storage
+
+\[External System\]
+
+A common network file share (NFS) used to store output test data before it is processed.
+It's a NAS that is accessible from all workstations.
+
+The current base location for FT2 data is: `\\mco1-fs03\Workgroups\validation-data\`
+
+Example output location: `Iris_Sensor_Head_70-0025-010\P32406697T00003188VAE7E3\`
+
+```shell
+Iris_Sensor_Head_XX-YYYY-ZZZ        - (XX-YYYY-ZZZ is the numeric sensor hardware pedigree) 
+└── <Sensor Serial Number> 
+    ├── FT2-Pre
+    │   ├── Adams_YYYYMMDD_HHMM     - (near field station)
+    │   ├── Eve_YYYYMMDD_HHMM       - (near field station)
+    │   ├── Bishop_YYYYMMDD_HHMM    - (long range test facility)
+    │   └── Skippy_YYYYMMDD_HHMM    - (long range test facility)
+    └── FT2-Post
+        └── <Same layout as FT2-Post>
+```
+
+#### Valkyrie Workstation
+
+\[External System\]
+
+A Windows workstation running the Valkyrie (Labview) software.
+Valykrie is a GUI that allows operators to select and run various tests for a sensor.
+The output of these tests, currently telnet .csv and point cloud .pcap captures, are stored on the NFS.
+
+Valkyrie will be kept as part of the new process.
+
+Repository: [SystemTestTools](https://github.com/luminartech/SystemTestTools)
+
+POC: Jeff Hawkins
+
+**- Outstanding Questions**
+
+- Changes to valkyrie will most likely be us.
+
+  - Need to get alignment on system processing team and tickets with Jira
+
+- How is Valkyrie going to be deployed as part of the solution?
+
+  - What is the current update process?
+  - 9/27 - Jeff would be interested
+
+- Can Valkyrie be integrated with the Jira REST API so ticket numbers can be sourced and test completion results written?
+
+  - Seems like the answer is [yes](https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z0000019VpgSAE&l=en-US), thought not sure on the level of effort.
+
+- PCAP recording is currently done with Wireshark, is that going to be replaced with a homegrown app?
+
+  - Is this in scope, and who will do this work?
+  - Could we switch this to another cli tool like PyPCAPKit (Python package)?
+
+##### PCAP Naming Convention
+
+PCAP files are automatically captured by [Valkyrie](#valkyrie-workstation) at various points in the testing.
+The output file name is based upon the test parameters. E.g. `282_200m_28fov_n4offs_n60_LO123_1_00002_20220428101251.pcap`
+
+**- Outstanding Questions**
+
+- The file names contain metadata that presumably is relevant to the data analysis phase.
+  - Parsing these strings seems error prone and complicated.
+    Can we write a pcap file with some basic identifiers in the name, but then store the metadata in a corresponding .csv or .json file?
 
 <!--
 Some people call this the Technical Architecture section. Again, try to walk through a user story to concretize this. Feel free to include many sub-sections and diagrams.
