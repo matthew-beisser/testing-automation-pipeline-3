@@ -16,18 +16,23 @@ Last Updated: 2024-mm-dd
 - [Proposed Solution](#proposed-solution)
   - [System Overview](#system-overview)
   - [Proposed Data Collection](#proposed-data-collection)
-    - [Data Transfer](#data-transfer)
-  - [Proposed Data Processing](#proposed-data-processing)
+  - [Entities](#entities)
+    - [Jira](#jira)
+    - [Wireshark CLI](#wireshark-cli)
+    - [Lidar](#lidar)
+    - [Valkyrie](#valkyrie)
+    - [Web Server](#web-server)
+    - [Local Database](#local-database)
+    - [Local File System](#local-file-system)
+    - [Pcap Converter](#pcap-converter)
+    - [Target Extraction](#target-extraction)
+  - [Proposed Data Transfer](#proposed-data-transfer)
   - [Proposed Entities](#proposed-entities)
     - [Database](#database)
-    - [Data Compilation (TBD)](#data-compilation-tbd)
     - [Data Analysis](#data-analysis)
     - [Diagnostics and Flashing Tool (DFT)](#diagnostics-and-flashing-tool-dft)
     - [File Monitor](#file-monitor)
     - [Front End](#front-end)
-    - [Jira (Existing)](#jira-existing)
-    - [NAS (File Storage - Existing)](#nas-file-storage---existing)
-    - [OpenTelemetry Collector](#opentelemetry-collector)
     - [Pcap Recorder (Replacement)](#pcap-recorder-replacement)
     - [Valkyrie Workstation (Existing)](#valkyrie-workstation-existing)
 - [Existing Solution](#existing-solution)
@@ -35,9 +40,8 @@ Last Updated: 2024-mm-dd
   - [Existing Data Processing](#existing-data-processing)
   - [Existing Entities](#existing-entities)
     - [Data Analysis (Target Extraction - Matlab)](#data-analysis-target-extraction---matlab)
-    - [Jira](#jira)
-    - [Lidar](#lidar)
-    - [NFS File Storage](#nfs-file-storage)
+    - [Lidar (Existing)](#lidar-existing)
+    - [NFS File Storage (Existing)](#nfs-file-storage-existing)
     - [Valkyrie Workstation](#valkyrie-workstation)
       - [PCAP Naming Convention](#pcap-naming-convention)
 - [Alternative Solutions](#alternative-solutions)
@@ -235,50 +239,156 @@ sequenceDiagram
 
     Valk->>Valk: Enter work item id
     Valk->>Jira: Work item ID (Rest API)
-    Jira->>Valk: TBD Data (.json)
+    Jira->>Valk: TBD Data (json)
     Valk->>Valk: Select test (GUI)
 
     Valk->>Lidar: Start test (doip)
 
     par Record doip data
         loop 
-            Valk->>Lidar: Read parameter (doip/dftlib)
-            Lidar->>Valk: Parameter data (doip)
-            Valk->>WWW: Parameter data (http post/put)
-            WWW->>DB: Write parameter data
-            DB-->>WWW: 
-            WWW-->>Valk: 
+            Valk->>Lidar: Request parameter data (doip/dftlib)
+            Lidar->>Valk: Send parameter data (doip)
+            Valk->>WWW: Send parameter data (http)
+            WWW->>DB: Write parameter data (sql)
+            DB-->>WWW: Done
+            WWW-->>Valk: Done
         end
     and Record point cloud
         loop 
             Valk->>WS: Start network capture (timer)
-            Valk->>FS: Write pcap metadata file (.json)
+            Valk->>FS: Write pcap metadata file (json)
             
             loop
-                Lidar->>WS: Point cloud data (udp)
-                WS->>FS: Write pcap file (.pcap)
+                Lidar->>WS: Send point cloud data (udp packets)
+                WS->>FS: Write pcap file (pcap)
             end
 
             WS-->>Valk: Done (timeout)
             Valk->>PConvert: Trigger pcap conversion (pcap name)
             PConvert->>FS: Retrieve pcap
-            FS-->>PConvert: 
+            FS-->>PConvert: Done
             PConvert->>PConvert: Convert pcap
-            PConvert->>FS: Converted pcap (file)
+            PConvert->>FS: Write converted pcap (file)
             PConvert-->>Valk: Done
             Valk->>TE: Trigger extraction
-            TE->>FS: Write extraction results (.txt)
+            TE->>FS: Write extraction results file (txt)
             TE-->>Valk: Done
-            Valk->>FS: Retrieve extraction results (.txt)
-            FS-->>Valk: 
-            Valk->>DB: Extraction results (sql)
+            Valk->>FS: Retrieve extraction results file (txt)
+            FS-->>Valk: Done
+            Valk->>WWW: Send extraction results (http)
+            WWW->>DB: Write extraction results (sql)
+            DB-->>WWW: Done
+            WWW-->>Valk: Done
         end
     end
 ```
 
-#### Data Transfer
+### Entities
 
-**Daemon with direct remote db access**
+#### Jira
+
+\[External System\]
+
+A Jira board is used along with epics, stories, and tasks to track the current testing tasks.
+
+**- Proposed -**
+
+The existing layout is insufficient for use with the automation proposal.
+
+**TODO:**
+
+- Decide upon a new Jira structure that will allow for automated updates via REST API.
+- Integrate Valkyrie with REST API
+  - User can input ticket number and Valkyrie will update the ticket
+
+**- Existing -**
+
+An epic is used to track a batch of sensor to test, e.g. [Iris Slim V1 - PV (70-0025007/008)](https://luminartech.atlassian.net/browse/TV-5628)
+
+Stories are used to group tasks in an adhoc manner, e.g. [PV: Leg1 ReTest_PV1-002753](https://luminartech.atlassian.net/browse/TV-8426)
+
+Tasks (not currently linked to epics) are used to track a certain type of test result for multiple sensors.
+A single sensor's test completion is tracked as a comment, e.g. [PV Retest Leg 1 FT1 Data Collection - Post FW Update](https://luminartech.atlassian.net/browse/TV-8763)
+
+#### Wireshark CLI
+
+\[External System\]
+
+**- Proposed -**
+
+**TODO:**
+**- Existing -**
+
+#### Lidar
+
+**- Proposed -**
+**TODO:**
+**- Existing -**
+
+#### Valkyrie
+
+**- Proposed -**
+**TODO:**
+**- Existing -**
+
+#### Web Server
+
+**- Proposed -**
+**TODO:**
+**- Existing -**
+
+#### Local Database
+
+**- Proposed -**
+
+[SurrealDB](https://surrealdb.com/) allows:
+
+- Document and structured data tables
+- File based data store
+- Client / server data store
+
+ODX files will be used to generate structured tables for each firmware version. In this way a change in firmware will not require a change to the database schema. (Could also write json document data).
+
+SurrealDB can be used at the local workstation level as well as the cloud level.
+
+A REST API will be used to write database content.
+
+For the MVP, the surrealist web API should be sufficient to interrogate the data.
+
+**TODO:**
+
+- Figure out initial database schema for MVP
+
+**- Existing -**
+
+A database is currently not used.
+
+#### Local File System
+
+**- Proposed -**
+
+Hard drive of the Valkyrie workstation.
+Each workstation will be used to store the pcaps and pcap metadata file.
+
+**- Existing -**
+
+Windows network share that stores the pcaps, telnet data, target extraction results, and all other test data.
+
+#### Pcap Converter
+
+**- Proposed -**
+**TODO:**
+**- Existing -**
+
+#### Target Extraction
+
+**- Proposed -**
+**TODO:**
+**- Existing -**
+
+### Proposed Data Transfer
+
+The proposed data Transfer for the FT2 automation testing is shown in the diagram below.
 
 ```mermaid
 %%{
@@ -290,8 +400,10 @@ sequenceDiagram
 
     Participant DB as Local Database
     Participant FS as Local File System
+    Participant LWWW as Local Web Server
     Participant Daemon as Data Translate Daemon
 
+    Participant WWW as Web Server
     Participant CloudDB as Cloud Database
     Participant CloudFS as Cloud File System
 
@@ -299,89 +411,41 @@ sequenceDiagram
         par Transfer pcap file
             Daemon->>FS: Initiate .pcap file copy
             FS->>CloudFS: Copy .pcap file (rsync, sftp)
-            CloudFS-->>Daemon: 
+            CloudFS-->>Daemon: Done 
             Daemon->>FS: Retrieve .pcap metadata file
             FS-->>Daemon: 
-            Daemon->>CloudDB: Write .pcap metadata (sql)
-            CloudDB-->>Daemon: 
+            Daemon->>Daemon: Parse .pcap metadata file
+            Daemon->>WWW: Send .pcap metadata (http)
+            WWW->>CloudDB: Write .pcap metadata (sql)
+            CloudDB-->>WWW: Done
+            WWW-->>Daemon: Done
             Daemon->>FS: Archive .pcap & metadata file
-            FS-->>Daemon: 
+            FS-->>Daemon: Done
 
         and Transfer doip parameter data
-            Daemon->>DB: Request doip data (sql)
-            DB-->>Daemon: 
-            Daemon->>CloudDB: doip data (sql)
-            CloudDB-->>Daemon: 
-            Daemon-->>DB: Mark processed (sql)
+            Daemon->>LWWW: Request doip data (http)
+            LWWW->>DB: Request doip data (sql)
+            DB-->>LWWW: 
+            LWWW-->>Daemon: doip data (json)
+            Daemon->>WWW: Send doip data (http)
+            WWW->>CloudDB: Write doip data (sql)
+            CloudDB-->>WWW: Done
+            WWW-->>Daemon: Done
+            Daemon->>LWWW: Mark data processed (http)
         and Transfer target extraction data
-            Daemon->>DB: Request target extraction data (sql)
-            DB-->>Daemon: 
-            Daemon->>CloudDB: target extraction data (sql)
-            CloudDB-->>Daemon: 
-            Daemon-->>DB: Mark processed (sql)
+            Daemon->>LWWW: Request target extraction data (http)
+            LWWW->>DB: Request target extraction data (sql)
+            DB-->>LWWW: 
+            LWWW-->>Daemon: Write target extraction data (json)
+            Daemon->>WWW: Send target extraction data (http)
+            WWW->>CloudDB: target extraction data (sql)
+            CloudDB-->>WWW: Done
+            WWW-->>Daemon: Done
+            Daemon->>LWWW: Mark data processed (http)
+            LWWW-->>Daemon: Done
         end
     end
 ```
-
-**Daemon with message queue (unlikely)**
-
-```mermaid
-%%{
-    init: {'theme': 'neutral' }
-}%%
-
-sequenceDiagram
-    autonumber
-
-    Participant DS as Incoming Data
-    Participant DB as Database
-    Participant FS as File System
-    Participant Daemon as Data Translate Daemon
-    Participant Prod as Message Producer
-    Participant Cons as Message Consumer
-    Participant CloudDB as Cloud Database
-    Participant CloudFS as Cloud File System
-
-    loop
-        par Record parameter data
-            DS->>DB: doip data (sql - key/binary data)
-        and Record pcap data
-            DS->>FS: pcap metadata file (.json)
-            DS->>FS: pcap file (.pcap)
-        end
-    end
-
-    loop
-        par Transfer pcap file
-            Daemon->>FS: Retrieve .pcap file
-            FS-->>Daemon: 
-            Daemon->>CloudFS: Copy .pcap file (magic transfer protocol)
-            CloudFS-->>Daemon: 
-
-            Daemon->>FS: Retrieve .pcap metadata file
-            FS-->>Daemon: 
-            Daemon->>Prod: .pcap metadata (.json)
-            Prod->>Cons: .pcap metadata message (.json)
-            Cons->>CloudDB: .pcap metadata (sql)
-            CloudDB-->>Cons: 
-            Cons-->>Prod: 
-            Prod-->>Daemon: 
-        and Transfer doip parameter data
-            Daemon->>DB: Request doip data (sql)
-            DB-->>Daemon: 
-            Daemon->>Prod: doip data (.json)
-            Prod->>Cons: doip data message (.json)
-            Cons->>CloudDB: doip data (sql)
-            CloudDB-->>Cons: 
-            Cons-->>Prod: 
-            Prod-->>Daemon:             
-        end
-    end
-```
-
-### Proposed Data Processing
-
-The proposed data processing for the FT2 automation testing is shown in the diagram below.
 
 <!-- ![container_diagram_proposal_data_processing](architecture/views/container_diagram_proposal_data_processing.svg) -->
 
@@ -391,17 +455,21 @@ The proposed data processing for the FT2 automation testing is shown in the diag
 
 \[Internal\]
 
-Backend storage for traces and target extraction results.
+Backend storage for doip and target extraction results.
 
 **- Outstanding Questions**
 
-- What database to use for non tracing? PostgreSQL? MySQL (MariaDB)
-- Are 2 databases going to be needed? 1 for traces, 1 for other data? Seems like yes.
-  - If yes, should trace data be "transferred" to the other database in some way before/after target extraction? Maybe it doesn't matter as Grafana can have multiple data stores?
-
-#### Data Compilation (TBD)
-
-TBD
+```json
+"scene": "Ricky",      # string
+"voltage": "14",       # float
+"temperature C": "25", # float
+"length": "00:45",     # duration mm:ss 
+"line sync": "20",     # integer
+"max azimuth": "0",    # float
+"min azimuth": "-16",  # float
+"scan pattern": "NameOfScanPattern.csv", # string
+"laser power percentage": "100.00" # float
+```
 
 #### Data Analysis
 
@@ -425,26 +493,6 @@ A command line tool for issuing diagnostics commands to a luminar sensor.
 It replaces telnet and allows parameters to be read from the sensor via DOIP.
 
 DFT uses OpenTelemetry spans as a way to measure the request and response time of a parameter over DOIP as well as recording the parameter's value.
-
-OpenTelemetry provides a general-purpose API and schema for logs, metrics, and traces.
-
-Logs are a time-ordered collection of discrete events, each of which contains a timestamp and some descriptive data.
-They are often used for debugging or auditing purposes.
-Logs can include any kind of data, such as error messages, information about the execution state, or user activities.
-They are highly flexible but can be more difficult to analyze due to their unstructured nature.
-
-Metrics are numerical values that represent the state of a system at a point in time.
-They are typically used for quantitative analysis of system performance and health.
-Metrics can be aggregated and analyzed over time to identify trends, spikes, or dips in system behavior.
-Examples of metrics include CPU usage, memory consumption, network latency, or the number of active users.
-
-A span represents a single unit of work within a system.
-It encapsulates information about a specific operation, including its start time, duration, associated attributes, and any events or errors during its execution.
-
-A trace is a collection of spans. They provide a detailed picture of a single operation or transaction as it flows through a distributed system.
-A trace captures the entire journey of a request, including all the services it interacts with and how long each interaction takes.
-Traces are essential for understanding the performance and behavior of complex, distributed systems.
-They can help identify bottlenecks, failures, or unexpected behavior in a system.
 
 Repository: [DFT](https://github.com/luminartech/dft)
 
@@ -490,52 +538,6 @@ Grafana seems like an obvious front end choice.
 - Will Grafana be adequate? What other options are there?
 - Is a cloud solution an option? Databricks is a cloud only.
 - What data is currently being exported for graphs and diagrams today?
-
-#### Jira (Existing)
-
-[Jira](#jira)
-
-#### NAS (File Storage - Existing)
-
-\[Internal\]
-
-[NFS File Storage](#nfs-file-storage)
-
-**- Outstanding Questions**
-
-- Who maintains this resource (backups, data transfers, etc) once manufacturing is moved?
-- It's unclear where the NAS needs to exist in the entire solution.
-- Could it host the databases and the Docker Container mount them?
-- Is storing the pcaps necessary?
-  - What should the storage layout be?
-  - If so, what about backups, archiving, storing, database storage path, etc.
-
-#### OpenTelemetry Collector
-
-\[External\]
-
-Open source or COTS solution to collect the spans emitted by \[#diagnostics-and-flashing-tool-(DFT)\] and store them in a database.
-
-Current possible solution for storing and visualizing traces:
-
-- Yaegar
-  - Complicated. Needs storage or forwarding mechanism.
-  - Supports: Cassandra, ElasticSearch
-- OpenObserve
-  - No external data connections
-- Grafana Tempo
-- Grafana Loki (for logs, not traces)
-  - Single Store TSDB (indexed database)
-  - File System
-
-**- Outstanding Questions**
-
-- How important is the visualization of the trace data?
-- How do we tie the spans to the corresponding pcaps?
-- What backend database is used?
-  - It may not be possible to store the trace data and the target extraction analysis together (though that would be advantageous).
-  - Do we need 2 database? And do we need to transform the trace data and then also put it into SQL database that will also house the target extraction data?
-- Is a paid solution acceptable or possible here? Seems like no.
 
 #### Pcap Recorder (Replacement)
 
@@ -600,26 +602,13 @@ POC: Daniel Ferrone
 - How can I run target extraction manually on a single pcap file?
 - What are the outputs, how many are there, and how are they used in reporting? (Mehdi Chaouqi)
 
-#### Jira
-
-\[External System\]
-
-A Jira board is used along with epics, stories, and tasks to track the current testing tasks.
-
-An epic is used to track a batch of sensor to test, e.g. [Iris Slim V1 - PV (70-0025007/008)](https://luminartech.atlassian.net/browse/TV-5628)
-
-Stories are used to group tasks in an adhoc manner, e.g. [PV: Leg1 ReTest_PV1-002753](https://luminartech.atlassian.net/browse/TV-8426)
-
-Tasks (not currently linked to epics) are used to track a certain type of test result for multiple sensors.
-A single sensor's test completion is tracked as a comment, e.g. [PV Retest Leg 1 FT1 Data Collection - Post FW Update](https://luminartech.atlassian.net/browse/TV-8763)
-
-#### Lidar
+#### Lidar (Existing)
 
 \[External System\]
 
 The Iris sensor under test. Iris+ and Halo support are [out of scope](#context) for the initial FT2 design.
 
-#### NFS File Storage
+#### NFS File Storage (Existing)
 
 \[External System\]
 
