@@ -8,14 +8,16 @@ LAYOUT_TOP_DOWN()
 
 ' Elements
 Person_Ext(Tester, "Test Engineer 1")
-System(DataCollection, "Data Collection", "Capture sensor test data.")
-System(DataProcessor, "Data Processing", "Perform sensor test analysis and generate analytics, reports, and dashboards.")
+System(DataCollection, "Data Collection", "Capture and store sensor test data.")
+System(DataProcessor, "Data Transfer", "Transfer data from local test workstations to the cloud.")
+System(DataView, "Data Visualization", "Visualize test data.")
 Person_Ext(DataAnalyst, "Test Engineer 2")
 
 ' Relationships
 Rel_Neighbor(Tester, DataCollection, "(1) initiates  test")
-Rel(DataCollection, DataProcessor, "(2) triggers")
-Rel_Neighbor(DataProcessor, DataAnalyst, "(3) test  results")
+Rel(DataCollection, DataProcessor, "(2) causes")
+Rel(DataProcessor, DataView, "(3) make  data  available")
+Rel_Neighbor(DataView, DataAnalyst, "(4) test  results")
 
 @enduml
 

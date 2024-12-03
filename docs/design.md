@@ -16,33 +16,32 @@ Last Updated: 2024-mm-dd
 - [Proposed Solution](#proposed-solution)
   - [System Overview](#system-overview)
   - [Proposed Data Collection](#proposed-data-collection)
-  - [Entities](#entities)
+  - [Proposed Data Collection Entities](#proposed-data-collection-entities)
     - [Jira](#jira)
     - [Wireshark CLI](#wireshark-cli)
     - [Lidar](#lidar)
     - [Valkyrie](#valkyrie)
-    - [Web Server](#web-server)
+    - [Local Web Server](#local-web-server)
     - [Local Database](#local-database)
     - [Local File System](#local-file-system)
     - [Pcap Converter](#pcap-converter)
     - [Target Extraction](#target-extraction)
   - [Proposed Data Transfer](#proposed-data-transfer)
-  - [Proposed Entities](#proposed-entities)
-    - [Database](#database)
-    - [Data Analysis](#data-analysis)
-    - [Diagnostics and Flashing Tool (DFT)](#diagnostics-and-flashing-tool-dft)
-    - [File Monitor](#file-monitor)
+  - [Proposed Data Transfer Entities](#proposed-data-transfer-entities)
+    - [Data Transfer Daemon](#data-transfer-daemon)
+  - [Additional Software](#additional-software)
+    - [DoIP Diagnostics and Flashing](#doip-diagnostics-and-flashing)
+    - [SOME/IP](#someip)
     - [Front End](#front-end)
-    - [Pcap Recorder (Replacement)](#pcap-recorder-replacement)
-    - [Valkyrie Workstation (Existing)](#valkyrie-workstation-existing)
 - [Existing Solution](#existing-solution)
   - [Existing Data Collection](#existing-data-collection)
   - [Existing Data Processing](#existing-data-processing)
   - [Existing Entities](#existing-entities)
-    - [Data Analysis (Target Extraction - Matlab)](#data-analysis-target-extraction---matlab)
+    - [Jira (Existing)](#jira-existing)
+    - [Target Extraction (Existing)](#target-extraction-existing)
     - [Lidar (Existing)](#lidar-existing)
     - [NFS File Storage (Existing)](#nfs-file-storage-existing)
-    - [Valkyrie Workstation](#valkyrie-workstation)
+    - [Valkyrie Workstation (Existing)](#valkyrie-workstation-existing)
       - [PCAP Naming Convention](#pcap-naming-convention)
 - [Alternative Solutions](#alternative-solutions)
 - [Cross-Team Impact](#cross-team-impact)
@@ -209,7 +208,7 @@ Data KPI Visualization
 
 ### System Overview
 
-The proposed system level diagram the FT automation testing is shown in the diagram below.
+The proposed system level diagram of the FT automation testing is shown in the diagram below.
 
 ![system_context_diagram](architecture/views/system_context_diagram.svg)
 
@@ -283,17 +282,12 @@ sequenceDiagram
     end
 ```
 
-### Entities
+### Proposed Data Collection Entities
 
 #### Jira
 
-\[External System\]
-
-A Jira board is used along with epics, stories, and tasks to track the current testing tasks.
-
-**- Proposed -**
-
-The existing layout is insufficient for use with the automation proposal.
+Jira is currently used to track testing tasks.
+The existing structure is incompatible for use to update automatically.
 
 **TODO:**
 
@@ -301,71 +295,87 @@ The existing layout is insufficient for use with the automation proposal.
 - Integrate Valkyrie with REST API
   - User can input ticket number and Valkyrie will update the ticket
 
-**- Existing -**
-
-An epic is used to track a batch of sensor to test, e.g. [Iris Slim V1 - PV (70-0025007/008)](https://luminartech.atlassian.net/browse/TV-5628)
-
-Stories are used to group tasks in an adhoc manner, e.g. [PV: Leg1 ReTest_PV1-002753](https://luminartech.atlassian.net/browse/TV-8426)
-
-Tasks (not currently linked to epics) are used to track a certain type of test result for multiple sensors.
-A single sensor's test completion is tracked as a comment, e.g. [PV Retest Leg 1 FT1 Data Collection - Post FW Update](https://luminartech.atlassian.net/browse/TV-8763)
-
 #### Wireshark CLI
 
-\[External System\]
+Open source software.
+Currently used by Valkyrie to collect pcaps during some tests.
+It will continue to be used.
 
-**- Proposed -**
+Pcaps are currently written with metadata in the file name.
+Since this data is hard to parse, a .json metadata file will be written that maps to the pcap filename.
+
+Example file data:
+
+```json
+"scene": "Ricky",      # string
+"voltage": "14",       # float
+"temperature C": "25", # float
+"length": "00:45",     # duration mm:ss 
+"line sync": "20",     # integer
+"max azimuth": "0",    # float
+"min azimuth": "-16",  # float
+"scan pattern": "NameOfScanPattern.csv", # string
+"laser power percentage": "100.00" # float
+```
 
 **TODO:**
-**- Existing -**
+
+- Figure out installation details on a test workstation.
 
 #### Lidar
 
-**- Proposed -**
-**TODO:**
-**- Existing -**
+Iris, Iris+, or (future) Halo sensor.
+
+Support will initially be for VCC Iris, with the limiting factor being DOIP support.
+Telnet is currently used for collecting data and will be replaced by DFT (DOIP) and a SOME/IP implementation.
+VSOME/IP can be used as a non ideal SOME/IP implementation.
 
 #### Valkyrie
 
-**- Proposed -**
-**TODO:**
-**- Existing -**
+A **Windows** workstation running the Valkyrie (Labview) software.
+(Labview is capable of running on Linux, but the target platform is Windows.)
+Valykrie is a GUI that allows operators to select and run various tests for a sensor.
+It is the process orchestrator that initiates all automated data collection, processing, and storage on a local workstation.
 
-#### Web Server
+Valkyrie will be kept as part of the new process.
 
-**- Proposed -**
+Repository: [SystemTestTools](https://github.com/luminartech/SystemTestTools)
+
+POC: Jeff Hawkins
+
 **TODO:**
-**- Existing -**
+
+- How is Valkyrie going to be deployed as part of the solution?
+
+  - What is the current update process?
+
+- Integrate Valkyrie with the Jira REST API so ticket numbers can be sourced and test completion results written.
+
+  - [Possible solution](https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z0000019VpgSAE&l=en-US).
+
+#### Local Web Server
+
+Rust webserver using the Rocket.rs web framework.
+It provides a REST API for storing test results.
 
 #### Local Database
-
-**- Proposed -**
 
 [SurrealDB](https://surrealdb.com/) allows:
 
 - Document and structured data tables
 - File based data store
 - Client / server data store
+- Scalable storage suitable for local and cloud environments
+- Surrealist web interface (SQL) for interrogating data.
 
-ODX files will be used to generate structured tables for each firmware version. In this way a change in firmware will not require a change to the database schema. (Could also write json document data).
-
-SurrealDB can be used at the local workstation level as well as the cloud level.
-
-A REST API will be used to write database content.
-
-For the MVP, the surrealist web API should be sufficient to interrogate the data.
+Eventually, ODX files will be used to generate structured tables for each firmware version.
+In this way a change in firmware diagnostics will automatically support removing and adding diagnostics fields.
 
 **TODO:**
 
 - Figure out initial database schema for MVP
 
-**- Existing -**
-
-A database is currently not used.
-
 #### Local File System
-
-**- Proposed -**
 
 Hard drive of the Valkyrie workstation.
 Each workstation will be used to store the pcaps and pcap metadata file.
@@ -376,19 +386,24 @@ Windows network share that stores the pcaps, telnet data, target extraction resu
 
 #### Pcap Converter
 
-**- Proposed -**
-**TODO:**
-**- Existing -**
+Stand alone executable triggered by Valkyrie that converts a pcap to an xyz file.
+
+Developed and maintained by Jeff Hawkins.
 
 #### Target Extraction
 
-**- Proposed -**
-**TODO:**
-**- Existing -**
+Stand alone executable (python code) triggered by Valkyrie that performs target extraction and analysis of pcaps.
+A test station targets a particular scene with each scene requiring its own algorithm.
+2 scenes have been ported from Matlab to Python.
+A third scene might be needed for TPK.
+
+Analysis takes about 10 - 30 seconds depending on pcap length. Output is a text file.
+
+Software is developed and maintained by Daniel Ferrone.
 
 ### Proposed Data Transfer
 
-The proposed data Transfer for the FT2 automation testing is shown in the diagram below.
+The diagram below shows the proposed solution for transferring local test data to the cloud (or alternate datastore).
 
 ```mermaid
 %%{
@@ -401,9 +416,9 @@ sequenceDiagram
     Participant DB as Local Database
     Participant FS as Local File System
     Participant LWWW as Local Web Server
-    Participant Daemon as Data Translate Daemon
+    Participant Daemon as Data Transfer Daemon
 
-    Participant WWW as Web Server
+    Participant WWW as Cloud Web Server
     Participant CloudDB as Cloud Database
     Participant CloudFS as Cloud File System
 
@@ -449,119 +464,49 @@ sequenceDiagram
 
 <!-- ![container_diagram_proposal_data_processing](architecture/views/container_diagram_proposal_data_processing.svg) -->
 
-### Proposed Entities
+### Proposed Data Transfer Entities
 
-#### Database
+The local and web instances of the database, file system, and web server are the same. They are described in the [Proposed Data Collection Entities Section](#proposed-data-collection-entities)
 
-\[Internal\]
+#### Data Transfer Daemon
 
-Backend storage for doip and target extraction results.
+Python application running on the test workstation.
+It periodically transfers pcaps and test data from the local test workstation to the cloud.
 
-**- Outstanding Questions**
+### Additional Software
 
-```json
-"scene": "Ricky",      # string
-"voltage": "14",       # float
-"temperature C": "25", # float
-"length": "00:45",     # duration mm:ss 
-"line sync": "20",     # integer
-"max azimuth": "0",    # float
-"min azimuth": "-16",  # float
-"scan pattern": "NameOfScanPattern.csv", # string
-"laser power percentage": "100.00" # float
-```
+Several additional pieces of software are required to meet the requirements of the automation effort.
 
-#### Data Analysis
+#### DoIP Diagnostics and Flashing
 
-\[Internal\]
-
-Performs target extraction and stores results.
-This Python code will replace the existing Matlab code.
-
-**- Outstanding Questions**
-
-- What is the estimated level of effort for this task?
-- How many algorithms are being run today?
-- How long does an analysis of a .pcap take?
-- What do the outputs look like?
-
-#### Diagnostics and Flashing Tool (DFT)
-
-\[External\]
-
-A command line tool for issuing diagnostics commands to a luminar sensor.
-It replaces telnet and allows parameters to be read from the sensor via DOIP.
-
-DFT uses OpenTelemetry spans as a way to measure the request and response time of a parameter over DOIP as well as recording the parameter's value.
+A library and command line tool for issuing diagnostics commands to a Luminar sensor.
+It partially replaces telnet and allows parameters to be read from the sensor via DOIP.
+Valkyrie will consume this as a shared .dll.
 
 Repository: [DFT](https://github.com/luminartech/dft)
 
 POC: Zach Heylmun
 
-**- Outstanding Questions**
+#### SOME/IP
 
-- Are only traces being provided, or is there other data to ingest?
-- There still seems to be a bit of work here by Zach in order to get is usable for testing.
-  - Automate timing of read requests
-  - Proof of concept for Mehdi
-  - Common generate of DIDs (data identifiers)?
-- How to integrate this tool with Valkyrie?
-
-#### File Monitor
-
-\[Internal\]
-
-Monitors a directory on the NAS for new test data that needs to be processed.
-
-Processing a test includes writing the .pcap metadata to the database, triggering the target extraction analysis, and performing any file cleanup or archiving.
-
-**- Outstanding Questions**
-
-- We should probably poll (once a minute) for tests to process.
-- What signals the "end" of test data output so the monitor knows to trigger target extraction? A single file in the same directory?
-- How is an interrupted test handled?
-- Does a test need to be archived (i.e. zipped and moved?)
+In order to replace telnet, DoIP and SOME/IP are both required.
+An implementation of SOME/IP is currently being worked on by Zach Heylmun.
+VSOMEIP is possible to use but work is required to make it usable in tests.
 
 #### Front End
-
-\[External\]
 
 GUI allowing for two disparate activities.
 
 1. View KPI data and export graphs
 1. View / administer(?) the system status
 
-Grafana seems like an obvious front end choice.
+- Grafana
+- Power BI
+- Databricks (cloud only)
 
 **- Outstanding Questions**
 
-- Will Grafana be adequate? What other options are there?
-- Is a cloud solution an option? Databricks is a cloud only.
 - What data is currently being exported for graphs and diagrams today?
-
-#### Pcap Recorder (Replacement)
-
-\[External\]
-
-This is a replacement for recording the .pcap test data with Wireshark.
-It will still be executed by Valkyrie in some fashion.
-
-The pcap file will no longer be written with metadata in the filename.
-
-Instead the filename will be:
-
-- Some combination of the name of the test run and a date timestamp.
-- A metadata file name the same as above with a different extension.
-
-**- Outstanding Questions**
-
-- Why don't we want to use wireshark on the commandline? Perhaps because of installing the package?
-- Does this just need to be a CLI tool?
-- Can we use an existing python pcap library like PyPCAPKit? No need to reinvent the wheel.
-
-#### Valkyrie Workstation (Existing)
-
-[Valkyrie Workstation](#valkyrie-workstation)
 
 <!-- End entities ----------------------------------------------------------------------------------------------------->
 
@@ -587,9 +532,18 @@ A user story is a great way to frame this. Keep in mind that your system might h
 
 ### Existing Entities
 
-#### Data Analysis (Target Extraction - Matlab)
+#### Jira (Existing)
 
-\[External System\]
+Jira is used to track test results in an unorganized fashion.
+
+An epic is used to track a batch of sensor to test, e.g. [Iris Slim V1 - PV (70-0025007/008)](https://luminartech.atlassian.net/browse/TV-5628)
+
+Stories are used to group tasks in an adhoc manner, e.g. [PV: Leg1 ReTest_PV1-002753](https://luminartech.atlassian.net/browse/TV-8426)
+
+Tasks (not currently linked to epics) are used to track a certain type of test result for multiple sensors.
+A single sensor's test completion is tracked as a comment, e.g. [PV Retest Leg 1 FT1 Data Collection - Post FW Update](https://luminartech.atlassian.net/browse/TV-8763)
+
+#### Target Extraction (Existing)
 
 The data analysis is performed by a Matlab application which performs target extraction on the test pcaps.
 
@@ -603,8 +557,6 @@ POC: Daniel Ferrone
 - What are the outputs, how many are there, and how are they used in reporting? (Mehdi Chaouqi)
 
 #### Lidar (Existing)
-
-\[External System\]
 
 The Iris sensor under test. Iris+ and Halo support are [out of scope](#context) for the initial FT2 design.
 
@@ -631,9 +583,7 @@ Iris_Sensor_Head_XX-YYYY-ZZZ        - (XX-YYYY-ZZZ is the numeric sensor hardwar
         └── <Same layout as FT2-Post>
 ```
 
-#### Valkyrie Workstation
-
-\[External System\]
+#### Valkyrie Workstation (Existing)
 
 A Windows workstation running the Valkyrie (Labview) software.
 Valykrie is a GUI that allows operators to select and run various tests for a sensor.
@@ -645,29 +595,9 @@ Repository: [SystemTestTools](https://github.com/luminartech/SystemTestTools)
 
 POC: Jeff Hawkins
 
-**- Outstanding Questions**
-
-- Changes to valkyrie will most likely be us.
-
-  - Need to get alignment on system processing team and tickets with Jira
-
-- How is Valkyrie going to be deployed as part of the solution?
-
-  - What is the current update process?
-  - 9/27 - Jeff would be interested
-
-- Can Valkyrie be integrated with the Jira REST API so ticket numbers can be sourced and test completion results written?
-
-  - Seems like the answer is [yes](https://knowledge.ni.com/KnowledgeArticleDetails?id=kA00Z0000019VpgSAE&l=en-US), thought not sure on the level of effort.
-
-- PCAP recording is currently done with Wireshark, is that going to be replaced with a homegrown app?
-
-  - Is this in scope, and who will do this work?
-  - Could we switch this to another cli tool like PyPCAPKit (Python package)?
-
 ##### PCAP Naming Convention
 
-PCAP files are automatically captured by [Valkyrie](#valkyrie-workstation) at various points in the testing.
+PCAP files are automatically captured by [Valkyrie](#valkyrie-workstation-existing) at various points in the testing.
 The output file name is based upon the test parameters. E.g. `282_200m_28fov_n4offs_n60_LO123_1_00002_20220428101251.pcap`
 
 **- Outstanding Questions**
@@ -693,8 +623,6 @@ I like including this section, because people often treat this as an afterthough
 
 ## Cross-Team Impact
 
-The biggest dependency on
-
 <!--
 - How will this increase on call and dev-ops burden?
 - How much money will it cost?
@@ -709,10 +637,6 @@ The biggest dependency on
 <!--
 Any open issues that you aren't sure about, contentious decisions that you'd like readers to weigh in on, suggested future work, and so on. A tongue-in-cheek name for this section is the “known unknowns”.
 -->
-
-- Is this project approved?
-- How long and for what parts of the project am I committed?
-- What's the desired start time for contractors?
 
 ## Detailed Scoping and Timeline
 
