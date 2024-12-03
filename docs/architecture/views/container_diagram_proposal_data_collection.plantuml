@@ -6,6 +6,10 @@
 title Proposal: Testing Automation Pipeline (Data Collection)
 LAYOUT_WITH_LEGEND()
 
+AddRelTag("purple_rel", $textColor="MediumPurple", $lineColor="MediumPurple")
+AddRelTag("golden_rel", $textColor="#B8860B", $lineColor="#B8860B")
+AddRelTag("coral_rel", $textColor="Coral", $lineColor="Coral")
+
 ' Elements
 
 Boundary(CloudNetwork, "External Network") <<boundary_solid_red>> {        
@@ -17,40 +21,31 @@ Boundary(CloudNetwork, "External Network") <<boundary_solid_red>> {
         
         Boundary(TestWorkStation, "Test Workstation") <<boundary_solid_gray>> {
             Container(Valkyrie, "Labview", "Valkyrie", "GUI for lidar testing.")
-            Container(DFTLib, "DFT", "doip", "Sends doip commands to lidar. Initiates open telemetry tracing, for tracking and recording doip response data.")
-            Container_Ext(PcapRecorder, "Pcap Recorder", ".pcap", "Records point cloud data and writes .pcap files.")
-        }
-        
-        Boundary(TestPipelineSystem, "Pipeline Automation") {           
-            Container(FileStorage, "File Storage", "nas", "Storage location for unprocessed .pcap files.")                        
-            
-            Boundary(Docker, "Docker (Linux)")  {
-                System(TestPipeline, "Pipeline Software", "Perform target extractation, and store results.")
-                Container(OpenTelemetry, "OpenTelemetry Collector", "Jaegar, Loki or similar", "Collect sensor test traces and forward to storage.")
-                
-                Boundary(DatabaseCollection, "Database") {
-                    ContainerDb(Database, "Database", "TBD", "Storage backend for extraction results (and ???).")
-                    ContainerDb(TraceDatabase, "Trace Database", "TBD", "Storage backend for tracing data.")
-                }                    
-            }
+            Container_Ext(PcapConverter, "Pcap Converter", "Python", "Converts .pcap files to .csv.")
+            Container_Ext(TargetExtraction, "Target Extraction", "Python", "Extracts targets from point cloud data.")
+            Container_Ext(Wireshark, "Wireshark CLI", ".pcap", "Records point cloud data and writes .pcap files.")
+            Container_Ext(FileSystem, "File System", "Local Storage", "Storage location for unprocessed .pcap files.")
+            ContainerDb(Database, "Database", "SurrealDB", "Storage backend for diagnostics data and extraction results.")
+            Container(WebServer, "Web Server", "Rust Rocket.rs", "REST API.")
         }
     }
 }
 
-Lay_U(Docker, FileStorage)
+'Lay_L(Tester1, Jira)
 
 ' Relationships
-Rel(Tester1, Valkyrie, "(1) trigger  lidar  test", "gui")
-BiRel(Jira, Valkyrie, "(1) work  item", "rest  api")
-Rel(PcapRecorder, FileStorage, "(5) write  point  cloud  files", ".pcap")
-BiRel(TestPipeline, FileStorage, "(6) uses  .pcap  files")
-Rel(TestPipeline, Database, "(7) target  extraction  results")
-Rel(TestPipeline, Database, "(7) .pcap metadata")
-Rel(Valkyrie, DFTLib, "(2) uses")
-BiRel(DFTLib, Lidar, "(3) sensor  commands / responses", "doip")
-Rel(DFTLib, OpenTelemetry, "(5) send  traces", "udp, http")
-Rel(OpenTelemetry, TraceDatabase, "(7) write  traces")
-Rel(Lidar, PcapRecorder, "(4) point  cloud", "udp")
+Rel(Tester1, Valkyrie, "(1) trigger  lidar  test", "gui", $tags="coral_rel")
+BiRel(Jira, Valkyrie, "(1) work  item", "rest  api", $tags="coral_rel")
+
+Rel(Valkyrie, Lidar, "(2) request  diagnostics  data", "doip")
+Rel(Lidar, Valkyrie, "(3) received  diagnostics  data", "doip", $tags="golden_rel")
+Rel(Lidar, Wireshark, "(3) publish  point  cloud", "udp", $tags="golden_rel")
+Rel(Wireshark, FileSystem, "(4) write  point  cloud  files", ".pcap", $tags="purple_rel")
+Rel(Valkyrie, WebServer, "(4) send  diagnostics  results", "http", $tags="purple_rel")
+Rel(Valkyrie, WebServer, "(7) send  target  extraction  results", "http")
+BiRel(Valkyrie, PcapConverter, "(5) triggers", "exe")
+BiRel(Valkyrie, TargetExtraction, "(6) triggers", "exe")
+Rel(WebServer, Database, "write  data", "sql")
 
 @enduml
 

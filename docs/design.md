@@ -214,9 +214,9 @@ The proposed system level diagram of the FT automation testing is shown in the d
 
 ### Proposed Data Collection
 
-The proposed data collection process for the FT automation testing is shown in the sequence diagram below.
+The proposed data collection process for the FT automation testing is shown in the container and sequence diagrams below.
 
-<!-- ![container_diagram_proposal_data_collection](architecture/views/container_diagram_proposal_data_collection.svg) -->
+![container_diagram_proposal_data_collection](architecture/views/container_diagram_proposal_data_collection.svg)
 
 ```mermaid
 %%{
