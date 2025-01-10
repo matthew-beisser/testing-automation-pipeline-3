@@ -29,5 +29,5 @@ To generate files for all the plantuml files
 
 ```shell
 cd docs/architecture/views/
-find . -iname '*.plantuml' | xargs java -jar plantuml-1.2024.7.jar -tsvg
+find ../ -iname '*.plantuml' | xargs java -jar plantuml-1.2024.7.jar -tsvg
 ```
