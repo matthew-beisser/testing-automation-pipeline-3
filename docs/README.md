@@ -213,6 +213,7 @@ The proposed system level diagram of the FT automation testing is shown in the d
 ![system_context_diagram](architecture/views/system_context_diagram.svg)
 
 ![cloud_architecture](architecture/views/cloud_architecture.png)
+[Cloud Architecture](https://miro.com/app/board/uXjVLfW5w_k=/)
 
 ### Proposed Data Collection
 
