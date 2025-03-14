@@ -6,49 +6,73 @@ Last Updated: 2024-mm-dd
 
 <!-- mdformat-toc start --slug=github --no-anchors --maxlevel=6 --minlevel=2 -->
 
-- [Table of Contents](#table-of-contents)
-- [Document Notes](#document-notes)
-- [Overview](#overview)
-- [Context](#context)
-- [Goals](#goals)
-- [Non-Goals](#non-goals)
-- [Milestones](#milestones)
-- [Proposed Solution](#proposed-solution)
-  - [System Overview](#system-overview)
-  - [Proposed Data Collection](#proposed-data-collection)
-  - [Proposed Data Collection Entities](#proposed-data-collection-entities)
-    - [Jira](#jira)
-    - [Wireshark CLI](#wireshark-cli)
-    - [Lidar](#lidar)
-    - [Valkyrie](#valkyrie)
-    - [Local Web Server](#local-web-server)
-    - [Local Database](#local-database)
-    - [Local File System](#local-file-system)
-    - [Pcap Converter](#pcap-converter)
-    - [Target Extraction](#target-extraction)
-  - [Proposed Data Transfer](#proposed-data-transfer)
-  - [Proposed Data Transfer Entities](#proposed-data-transfer-entities)
-    - [Data Transfer Daemon](#data-transfer-daemon)
-  - [Additional Software](#additional-software)
-    - [DoIP Diagnostics and Flashing](#doip-diagnostics-and-flashing)
-    - [SOME/IP](#someip)
-    - [Front End](#front-end)
-- [Existing Solution](#existing-solution)
-  - [Existing Data Collection](#existing-data-collection)
-  - [Existing Data Processing](#existing-data-processing)
-  - [Existing Entities](#existing-entities)
-    - [Jira (Existing)](#jira-existing)
-    - [Target Extraction (Existing)](#target-extraction-existing)
-    - [Lidar (Existing)](#lidar-existing)
-    - [NFS File Storage (Existing)](#nfs-file-storage-existing)
-    - [Valkyrie Workstation (Existing)](#valkyrie-workstation-existing)
-      - [PCAP Naming Convention](#pcap-naming-convention)
-- [Alternative Solutions](#alternative-solutions)
-- [Cross-Team Impact](#cross-team-impact)
-- [Open Questions](#open-questions)
-- [Detailed Scoping and Timeline](#detailed-scoping-and-timeline)
+- [Testing Automation Pipeline System Design](#testing-automation-pipeline-system-design)
+  - [Table of Contents](#table-of-contents)
+  - [Schedule](#schedule)
+  - [Document Notes](#document-notes)
+  - [Overview](#overview)
+  - [Context](#context)
+  - [Goals](#goals)
+  - [Non-Goals](#non-goals)
+  - [Milestones](#milestones)
+  - [Proposed Solution](#proposed-solution)
+    - [System Overview](#system-overview)
+    - [Proposed Data Collection](#proposed-data-collection)
+    - [Proposed Data Collection Entities](#proposed-data-collection-entities)
+      - [Jira](#jira)
+      - [Wireshark CLI](#wireshark-cli)
+      - [Lidar](#lidar)
+      - [Valkyrie](#valkyrie)
+      - [Local Web Server](#local-web-server)
+      - [Local Database](#local-database)
+      - [Local File System](#local-file-system)
+      - [Pcap Converter](#pcap-converter)
+      - [Target Extraction](#target-extraction)
+    - [Proposed Data Transfer](#proposed-data-transfer)
+    - [Proposed Data Transfer Entities](#proposed-data-transfer-entities)
+      - [Data Transfer Daemon](#data-transfer-daemon)
+    - [Additional Software](#additional-software)
+      - [DoIP Diagnostics and Flashing](#doip-diagnostics-and-flashing)
+      - [SOME/IP](#someip)
+      - [Front End](#front-end)
+  - [Existing Solution](#existing-solution)
+    - [Existing Data Collection](#existing-data-collection)
+    - [Existing Data Processing](#existing-data-processing)
+    - [Existing Entities](#existing-entities)
+      - [Jira (Existing)](#jira-existing)
+      - [Target Extraction (Existing)](#target-extraction-existing)
+      - [Lidar (Existing)](#lidar-existing)
+      - [NFS File Storage (Existing)](#nfs-file-storage-existing)
+      - [Valkyrie Workstation (Existing)](#valkyrie-workstation-existing)
+        - [PCAP Naming Convention](#pcap-naming-convention)
+  - [Alternative Solutions](#alternative-solutions)
+  - [Cross-Team Impact](#cross-team-impact)
+  - [Open Questions](#open-questions)
+  - [Detailed Scoping and Timeline](#detailed-scoping-and-timeline)
 
 <!-- mdformat-toc end -->
+
+## Schedule
+
+``` mermaid
+gantt
+    title 2025 Product Assurance Pipeline Roadmap
+    dateFormat  YYYY-MM
+    PA1 Basic Generic Diagnostics: d1, 2024-12, 12w
+    Kim Onboards:done, milestone, 2025-01-06, 0d
+    Matt 50 %:done, 2025-02-15, 16w
+    Zach 0%:done, 2025-03-01, 14w
+    PA2 Basic VCC Diagnostics  :a1, 2025-02-22, 14w
+    Second contractor onboards: milestone,done, 2025-03-31, 0d
+    Sync with Mehdi & others about diagnostics:done, milestone, 2025-04-15, 0d
+    Simple Some/IP : e1, 2025-05-01, 5w
+    PA3 Local testing workflow :b1, 2025-06, 72d
+    Valkyrie Integration: g1, 2025-06-01, 6w
+    Usable for integration with Mehdi and Jeff:crit, milestone, 2025-06-01, 0d
+    Develop ODX Support: f1, 2025-07-30, 8w
+    Usable with Local VCC Iris Test Events:crit, milestone, 2025-08-15, 0d
+    PA4 Deployment and Testing  :c1, 2025-08-10, 12w
+```
 
 <!-- 
 Document template taken from:
