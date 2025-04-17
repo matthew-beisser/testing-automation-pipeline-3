@@ -61,7 +61,8 @@ gantt
     PA1 Basic Generic Diagnostics: d1, 2024-12, 12w
     Kim Onboards:done, milestone, 2025-01-06, 0d
     Matt 50 %:done, 2025-02-15, 16w
-    Zach 0%:done, 2025-03-01, 14w
+    Zach 0%:done, 2025-03-01, 6w
+    Zach > 50%:done, 2025-04-12, 7w
     PA2 Basic VCC Diagnostics  :a1, 2025-02-22, 14w
     Second contractor onboards: milestone,done, 2025-03-31, 0d
     Sync with Mehdi & others about diagnostics:done, milestone, 2025-04-15, 0d
