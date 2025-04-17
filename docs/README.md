@@ -68,7 +68,7 @@ gantt
     Simple Some/IP : e1, 2025-05-01, 5w
     PA3 Local testing workflow :b1, 2025-06, 72d
     Valkyrie Integration: g1, 2025-06-01, 6w
-    Usable for integration with Mehdi and Jeff:crit, milestone, 2025-06-01, 0d
+    Usable for integration with Mehdi and others:crit, milestone, 2025-06-01, 0d
     Develop ODX Support: f1, 2025-07-30, 8w
     Usable with Local VCC Iris Test Events:crit, milestone, 2025-08-15, 0d
     PA4 Deployment and Testing  :c1, 2025-08-10, 12w
