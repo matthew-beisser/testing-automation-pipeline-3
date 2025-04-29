@@ -23,6 +23,7 @@ Last Updated: 2024-mm-dd
       - [Wireshark CLI](#wireshark-cli)
       - [Lidar](#lidar)
       - [Valkyrie](#valkyrie)
+        - [What Valkyrie Needs To Do](#what-valkyrie-needs-to-do)
       - [Local Web Server](#local-web-server)
       - [Local Database](#local-database)
       - [Local File System](#local-file-system)
@@ -257,55 +258,81 @@ sequenceDiagram
     Participant Jira
     Participant WS as Wireshark CLI
     Participant Lidar
+    Participant SSIP as Simple Some/IP
     Participant Valk as Valkyrie
-    Participant WWW as Web Server
+    Participant DFT
+    Participant Hamper as Hamper (Web Server)
     Participant DB as Local Database
     Participant FS as Local File System
     Participant PConvert as Pcap Converter
     Participant TE as Target Extraction
 
+    %% TBD
     Valk->>Valk: Enter work item id
+    
+    %% TBD - Likely not the correct location for this
     Valk->>Jira: Work item ID (Rest API)
     Jira->>Valk: TBD Data (json)
+    %% 
+
     Valk->>Valk: Select test (GUI)
+    Valk->>Hamper: Get test uuid (http)
+    Hamper-->>Valk: uuid
+    Valk->>Lidar: Set sensor active (someip)
 
-    Valk->>Lidar: Start test (doip)
-
-    par Record doip data
+    %% TBD - How does Valk interact with SSIP. Pending discussion on SSIP. CLI vs library
+    par Record someip data
+        loop
+            Valk->>SSIP: Subscribe events
+            SSIP->>Lidar: Subscribe events
+            Lidar-->>SSIP: Event data
+            %% What events need to be stored? Data formats?
+            SSIP-->>Hamper: ??? Event data (http) ??? 
+        end
+    and Record doip data
         loop 
-            Valk->>Lidar: Request parameter data (doip/dftlib)
-            Lidar->>Valk: Send parameter data (doip)
-            Valk->>WWW: Send parameter data (http)
-            WWW->>DB: Write parameter data (sql)
-            DB-->>WWW: Done
-            WWW-->>Valk: Done
+            Valk->>DFT: Read archive (exec process)
+            loop
+                DFT->>Lidar: Request parameter data (doip)
+                Lidar-->>DFT: Send parameter data (doip)
+                DFT->>Hamper: Send parameter data (http)
+                Hamper->>DB: Write parameter data (sql)
+                DB-->>Hamper: Write done
+                Hamper-->>DFT: Write done
+            end
+            DFT-->>Valk: Archive Done            
         end
     and Record point cloud
         loop 
-            Valk->>WS: Start network capture (timer)
-            Valk->>FS: Write pcap metadata file (json)
+            Valk->>WS: Start pcap capture (exec process)
             
             loop
                 Lidar->>WS: Send point cloud data (udp packets)
                 WS->>FS: Write pcap file (pcap)
             end
+            WS-->>Valk: Pcap Capture Done (timeout) 
+            Valk->>FS: Write pcap metadata file (json) 
 
-            WS-->>Valk: Done (timeout)
-            Valk->>PConvert: Trigger pcap conversion (pcap name)
+            %% TBD - This might not be needed
+            Valk->>PConvert: Trigger pcap xyz conversion [pcap name] (exec process?)
             PConvert->>FS: Retrieve pcap
             FS-->>PConvert: Done
             PConvert->>PConvert: Convert pcap
             PConvert->>FS: Write converted pcap (file)
             PConvert-->>Valk: Done
-            Valk->>TE: Trigger extraction
+            
+            Valk->>TE: Trigger extraction (exec process)
             TE->>FS: Write extraction results file (txt)
             TE-->>Valk: Done
             Valk->>FS: Retrieve extraction results file (txt)
             FS-->>Valk: Done
-            Valk->>WWW: Send extraction results (http)
-            WWW->>DB: Write extraction results (sql)
-            DB-->>WWW: Done
-            WWW-->>Valk: Done
+            
+            %% TBD - Who does this? Script? Labview library?
+            Valk->>Valk: ??? Parse extraction results - csv to json ???
+            Valk->>Hamper: Send extraction results (http)
+            Hamper->>DB: Write extraction results (sql)
+            DB-->>Hamper: Done
+            Hamper-->>Valk: Done
         end
     end
 ```
@@ -369,7 +396,32 @@ Valkyrie will be kept as part of the new process.
 
 Repository: [SystemTestTools](https://github.com/luminartech/SystemTestTools)
 
-POC: Jeff Hawkins
+POC: Mehdi Chaouqi
+
+##### What Valkyrie Needs To Do
+
+[text](https://github.com/luminartech/dft/issues/329)
+
+- ✅ Execute process
+  - ✅ Knows when execution is complete
+- Rest API
+  - Retrieve test sequence number
+  - Write test data (what?)
+- Simple SOME/IP
+  - Send commands, i.e. sensor active
+  - CLI (execute process)
+  - DLL bindings?
+- Pcap capture
+  - ✅ Start wireshark capture
+  - ✅ Write pcap
+  - ✅ End capture
+  - Write pcap metadata (currently, embedded in pcap filename) to REST API
+- ✅ XYZ Conversion
+  - ✅ Trigger conversion
+- Target extraction
+  - ✅ Trigger target extraction (on xyz file?)
+  - Parse and convert .csv to .json
+  - Write extraction results to REST API
 
 **TODO:**
 
